@@ -2,6 +2,7 @@
 
 Each phase ends with **exit criteria** and **interview takeaways**, so the lab work
 also prepares you for interviews. Aim for about one phase per week.
+The concepts behind each phase are explained in [principles/](principles/README.md).
 
 ---
 

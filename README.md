@@ -25,6 +25,7 @@ make open         # http://localhost:8080
 | Path | Purpose |
 |---|---|
 | [docs/sre-way.md](docs/sre-way.md) | Our SRE operating model: the principles and rules we follow |
+| [docs/principles/](docs/principles/) | SRE concepts (SLI/SLO/SLA, error budgets, incidents, postmortems, and more) mapped to this lab |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Phased learning plan with labs and exit criteria |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 | [docs/templates/](docs/templates/) | SLO, runbook, and postmortem templates |

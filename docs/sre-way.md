@@ -4,6 +4,9 @@ This is the working agreement for how we run services in this lab. It is based o
 the Google SRE books and adapted as we learn. Change it through a PR that says what
 we learned.
 
+The reasoning behind each rule, and how each one maps to the lab, is in
+[principles/](principles/README.md).
+
 ## 1. Reliability is a feature, and it has a target
 - 100% is the wrong target. Every service has an **SLO** agreed with its "product owner"
   (us, playing that role).
