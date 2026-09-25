@@ -42,10 +42,10 @@ Phase 0–1 uses the bundled stack. Phase 2 moves to the stack above (write an A
 
 | ID | CUJ | SLI | Good event | Source | SLO (30d) |
 |---|---|---|---|---|---|
-| SLI-1 | Checkout | Availability | `PlaceOrder` span not `STATUS_CODE_ERROR` | spanmetrics (`checkout`) | **99.5%** |
+| SLI-1 | Checkout | Availability | `POST /api/checkout` not 5xx and not 422 | spanmetrics (`frontend` server span, HTTP status dimension) | **99.5%** |
 | SLI-2 | Checkout | Latency | `PlaceOrder` < 1000 ms | spanmetrics histogram | **99%** |
 | SLI-3 | Browse | Availability | Product API response not 5xx | Envoy (`frontend-proxy`) | **99.9%** |
-| SLI-4 | Browse | Latency | Product API < 300 ms | Envoy histogram | **99%** |
+| SLI-4 | Browse | Latency | Product API < 400 ms | spanmetrics histogram (`frontend`) | **99%** |
 | SLI-5 | Add to cart | Availability | `AddItem` not an error | spanmetrics (`cart`) | **99.9%** |
 | SLI-6 | Order processing (async) | Freshness | Kafka consumer lag for `accounting` < 60s | Kafka exporter | **99%** of minutes |
 | SLI-7 | Whole shop | Synthetic availability | Homepage probe succeeds | blackbox exporter | **99.9%** |
@@ -54,7 +54,7 @@ Load-generator traffic **counts as user traffic** in this lab, because it's our 
 
 ## 3. SLOs as code (Sloth)
 
-The specs live in `slos/<service>.yaml`, and CI generates Prometheus rules from them. Example for SLI-1:
+The specs live in `slos/<service>.yaml` and are **implemented** (Phase 1): see [slos/checkout.yaml](../slos/checkout.yaml) for the real, tested version, and the [Phase 1 guide](labs/phase-1-slos.md) for why it classifies failures by HTTP status. Simplified example:
 
 ```yaml
 version: "prometheus/v1"

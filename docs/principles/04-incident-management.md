@@ -87,13 +87,13 @@ The Astronomy Shop's flagd flags create **repeatable, realistic incidents**. Run
 |---|---|---|---|---|
 | Payment outage | `paymentFailure` | Checkout errors | SEV1/2 | Identify payment service, disable flag |
 | Bad product | `productCatalogFailure` | One product page errors | SEV2/3 | Trace to product-catalog |
-| Noisy neighbour | `adServiceHighCpu` | Latency on browse | SEV2 | Saturation on ad service, scale or limit it |
-| GC pauses | `adServiceManualGc` | Latency spikes | SEV3 | JVM GC metrics |
+| Noisy neighbour | `adHighCpu` | Latency on browse | SEV2 | Saturation on ad service, scale or limit it |
+| GC pauses | `adManualGc` | Latency spikes | SEV3 | JVM GC metrics |
 | Memory leak | `recommendationCacheFailure` | Rising memory, OOM kills | SEV2 | Memory growth, restart and fix |
 | Async backlog | `kafkaQueueProblems` | Consumer lag, delayed accounting | SEV3 | Kafka lag dashboard |
 | Traffic spike | `loadGeneratorFloodHomepage` | Saturation, latency | SEV2 | Scaling, rate limiting |
 
-Available flag names vary by demo version, so check the flag UI at `/feature`.
+Flag names verified on demo 3.1.0 (`scripts/flag.sh list`). Also available: `cartFailure`, `paymentUnreachable`, `emailMemoryLeak`, `failedReadinessProbe`, `imageSlowLoad`, `intlShippingSlowdown`, `productCatalogLockContention`.
 
 ### How to run a game day
 1. One person (the **game master**) secretly turns on a flag and doesn't tell the responders which one.

@@ -100,37 +100,41 @@ Checkout is where the money comes from, so it gets the strictest SLO.
 | Checkout | Availability: non-error `PlaceOrder` responses | 99.5% | 3h 36m |
 | Checkout | Latency: `PlaceOrder` under 1s | 99% | 7h 12m |
 | Browse | Availability: non-5xx on product APIs | 99.9% | 43m |
-| Browse | Latency: product API under 300ms | 99% | 7h 12m |
+| Browse | Latency: product API under 400ms (nearest histogram bucket) | 99% | 7h 12m |
 | Add to cart | Availability | 99.9% | 43m |
 
 ### Example SLI queries (PromQL)
 
-The OTel demo derives request metrics from traces using the collector's *spanmetrics*
-connector. Metric and label names differ between chart versions, so **check them in
-Prometheus during Phase 1** before relying on these.
+These are the **real queries used in the lab**, verified in Phase 1. The reasoning behind each detail
+(status codes instead of span status, `or vector(0)`, counting each request once) is in the
+[Phase 1 guide](../labs/phase-1-slos.md).
 
 ```promql
-# Checkout availability SLI (ratio of good to valid, over 5m)
-sum(rate(traces_span_metrics_calls_total{
-      service_name="checkout", span_name="oteldemo.CheckoutService/PlaceOrder",
-      status_code!="STATUS_CODE_ERROR"}[5m]))
-/
-sum(rate(traces_span_metrics_calls_total{
-      service_name="checkout", span_name="oteldemo.CheckoutService/PlaceOrder"}[5m]))
+# Checkout availability SLI: good = not 5xx and not 422 (the frontend's failed-order response)
+1 - (
+  (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+      span_name="POST /api/checkout",http_response_status_code=~"5..|422"}[5m])) or vector(0))
+  /
+  sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+      span_name="POST /api/checkout",http_response_status_code!=""}[5m]))
+)
 
-# Checkout latency SLI: share of requests under 1000ms
-sum(rate(traces_span_metrics_duration_milliseconds_bucket{
-      service_name="checkout", span_name="oteldemo.CheckoutService/PlaceOrder", le="1000"}[5m]))
+# Checkout latency SLI: share of requests under 1000 ms (the threshold must be a histogram bucket)
+sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+    span_name="POST /api/checkout",http_response_status_code!="",le="1000"}[5m]))
 /
-sum(rate(traces_span_metrics_duration_milliseconds_count{
-      service_name="checkout", span_name="oteldemo.CheckoutService/PlaceOrder"}[5m]))
+sum(rate(traces_span_metrics_duration_milliseconds_count{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+    span_name="POST /api/checkout",http_response_status_code!=""}[5m]))
 ```
 
+> **Lesson from the lab:** an SLI based on OTel *span status* missed a 50% checkout outage, because HTTP
+> server spans are only marked ERROR for 5xx and the frontend returns 422. **Test every SLI with an injected failure.**
+
 ### Lab exercises (Phase 1)
-- [ ] Record a one-week baseline for each SLI above
-- [ ] Write one SLO doc per CUJ in `slos/` using [the template](../templates/slo.md)
-- [ ] Generate recording rules and alerts with Sloth
-- [ ] Turn on the `paymentFailure` flag at 10% and watch the checkout SLI fall while browse stays flat
+- [x] Record a baseline for each SLI above (provisional; re-baseline after ≥24h)
+- [x] Write one SLO spec per CUJ in `slos/`
+- [x] Generate recording rules and alerts with Sloth
+- [x] Turn on the `paymentFailure` flag and watch the checkout SLI fall while browse stays flat (done at 50%)
 
 ## Common mistakes
 - Using CPU or memory as an SLI. Users don't feel CPU.

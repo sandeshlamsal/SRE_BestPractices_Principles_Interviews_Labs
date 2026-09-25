@@ -19,10 +19,13 @@ The local-vs-cloud comparison and principle coverage for every phase are in [lab
 **Interview:** "Walk me through what happens when a user clicks *Place order*."
 
 ## Phase 1: SLIs & SLOs
-- [ ] Pick 3 critical user journeys: **browse catalog**, **add to cart**, **checkout**
-- [ ] Define availability and latency SLIs at the edge (frontend-proxy / Envoy metrics)
-- [ ] Write SLO docs in `slos/` using the template, then generate the rules with [Sloth](https://sloth.dev)
-- [ ] Error-budget dashboard in Grafana
+- [x] Pick 3 critical user journeys: **browse catalog**, **add to cart**, **checkout**
+- [x] Define availability and latency SLIs (at the frontend server spans; Envoy spans carry no route)
+- [x] Write SLO specs in `slos/`, then generate the rules with [Sloth](https://sloth.dev)
+- [x] Error-budget dashboard in Grafana
+- [x] Test the SLI with an injected failure (`paymentFailure`): a blind spot was found and fixed
+
+📘 **Execution guide:** [labs/phase-1-slos.md](labs/phase-1-slos.md), with 18 edge cases logged (done 2026-09-25)
 
 **Exit:** each journey shows its SLI, target, and remaining budget.
 **Interview:** SLI vs SLO vs SLA; why not 100%; how to choose a target.
@@ -48,7 +51,8 @@ The local-vs-cloud comparison and principle coverage for every phase are in [lab
 Use flagd flags to inject real failures and run each one as a full incident, with IC, timeline, and postmortem:
 - [ ] `paymentFailure`: checkout errors
 - [ ] `productCatalogFailure`: errors on one product
-- [ ] `adServiceHighCpu` / `adServiceManualGc`: latency and saturation
+- [ ] `adHighCpu` / `adManualGc`: latency and saturation
+- [ ] SLI-data-missing alert (`absent()`), found necessary in Phase 1 (P1-ISSUE-16)
 - [ ] `kafkaQueueProblems`: async backlog and consumer lag
 - [ ] `recommendationCacheFailure`: a memory leak
 - [ ] `loadGeneratorFloodHomepage`: a traffic spike

@@ -68,7 +68,7 @@ Every runbook follows [the template](templates/runbook.md) and gets updated afte
 | Week | Scenario | Trigger | Primary skill practiced |
 |---|---|---|---|
 | 1 | Payment failures | `paymentFailure` flag at 10% → 50% | Detecting with SLO alerts; mitigating by turning off a flag |
-| 2 | Slow browse | `adServiceHighCpu` | Latency SLO; finding saturation |
+| 2 | Slow browse | `adHighCpu` | Latency SLO; finding saturation |
 | 3 | Memory leak | `recommendationCacheFailure` | Reading USE dashboards; OOM kills; restart vs fix |
 | 4 | Async backlog | `kafkaQueueProblems` | Freshness SLI; incident with no immediate user impact (SEV3) |
 | 5 | Bad release | Deploy a broken checkout image (Phase 7) | Rollback; change correlation |

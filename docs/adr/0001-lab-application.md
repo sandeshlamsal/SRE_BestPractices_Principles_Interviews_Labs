@@ -21,5 +21,5 @@ exercises like multi-tenant alerting.
 
 ## Consequences
 - Incidents can be triggered by flipping feature flags (e.g. `paymentFailure`,
-  `adServiceHighCpu`, `kafkaQueueProblems`, `productCatalogFailure`), so incident drills can be repeated.
+  `adHighCpu`, `kafkaQueueProblems`, `productCatalogFailure`), so incident drills can be repeated.
 - Docker needs at least 6 GB RAM.
