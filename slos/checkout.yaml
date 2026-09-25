@@ -65,3 +65,31 @@ slos:
       ticket_alert:
         labels:
           severity: ticket
+
+  # Game Day 1 (2026-09-25, P4-GD1): cartFailure made EmptyCart fail for 46% of orders. Checkout still
+  # returned 200 and payment was charged, but the cart was NOT cleared (duplicate-order risk).
+  # Every availability/latency SLI stayed at 100% -> no alert. This CORRECTNESS SLI closes that gap.
+  - name: "order-integrity"
+    objective: 99.9
+    description: "After an order is placed, the customer's cart is cleared (EmptyCart succeeds)."
+    sli:
+      events:
+        error_query: >-
+          (sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER",
+          span_name="POST /oteldemo.CartService/EmptyCart",status_code="STATUS_CODE_ERROR"}[{{.window}}])) or vector(0))
+        total_query: >-
+          sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER",
+          span_name="POST /oteldemo.CartService/EmptyCart"}[{{.window}}]))
+    alerting:
+      name: CheckoutOrderIntegrityBudgetBurn
+      labels:
+        category: correctness
+      annotations:
+        summary: "Orders are completing without clearing the cart (duplicate-order risk)."
+        runbook: "https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/checkout-order-integrity.md"
+      page_alert:
+        labels:
+          severity: page
+      ticket_alert:
+        labels:
+          severity: ticket

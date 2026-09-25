@@ -9,7 +9,7 @@ You can rebuild any phase from its guide alone. How the phases map to SRE princi
 | 1 | [SLIs, SLOs, error budgets](phase-1-slos.md) | ✅ | 5 SLOs as code; **found an SLI blind to a 50% outage (422s)** and fixed it; page in ~4 min | 18 |
 | 2 | [Observability platform](phase-2-observability.md) | ✅ | kps + Tempo + Loki, cross-signal links, pipeline self-monitoring; alert → trace → log < 2 min; **root-cause correction (host sleep)** | 22 |
 | 3 | [Alerting & on-call](phase-3-alerting.md) | ✅ (real PagerDuty/Slack pending) | 15 alerts, 9 runbooks, routing tests 11/11; e2e page 332 s, resolved 591 s | 9 |
-| 4 | Incident response game days | ⏭️ next | | |
+| 4 | [Incident response game days](phase-4-incident-response.md) | 🔄 in progress | GD1 found **orders charged with the cart not cleared, no alert**; new correctness SLO | 5 |
 
 ## Conventions
 - Issue IDs: `ISSUE-n` (Phase 0), `P1-ISSUE-n`, `P2-ISSUE-n`, … Each has symptom, root cause, fix, and how it was verified.

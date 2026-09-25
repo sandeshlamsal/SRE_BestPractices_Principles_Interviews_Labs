@@ -55,6 +55,9 @@ The local-vs-cloud comparison and principle coverage for every phase are in [lab
 **Interview:** alert fatigue, and why to alert on burn rate rather than thresholds.
 
 ## Phase 4: Incident response game days
+📘 **Execution guide:** [labs/phase-4-incident-response.md](labs/phase-4-incident-response.md) (in progress: GD1 done)
+- [x] Game-day tooling: `scripts/gameday.sh` (sealed random scenarios), incident template, postmortem index, handoff log
+- [x] Game Day 1 `cart-failure`: found a silent correctness failure; new `checkout-order-integrity` SLO
 Use flagd flags to inject real failures and run each one as a full incident, with IC, timeline, and postmortem:
 - [ ] `paymentFailure`: checkout errors
 - [ ] `productCatalogFailure`: errors on one product

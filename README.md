@@ -26,7 +26,7 @@ make open         # http://localhost:8080
 |---|---|
 | 0 Foundation · 1 SLOs · 2 Observability | ✅ done |
 | 3 Alerting & on-call | ✅ done (real PagerDuty/Slack pending credentials) |
-| 4 Incident game days | ⏭️ next |
+| 4 Incident game days | 🔄 in progress (GD1 done) |
 
 Highlights: an SLI that was blind to a 50% outage, found and fixed; memory-limit thrashing with zero OOM kills;
 and a root cause we got **wrong** and corrected in the open ([sre-in-practice.md](docs/sre-in-practice.md)).

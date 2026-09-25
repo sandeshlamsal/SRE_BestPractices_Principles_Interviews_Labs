@@ -472,3 +472,216 @@ groups:
       summary: Checkout latency error budget is burning too fast.
       title: (ticket) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget
         burn rate is too fast.
+- name: sloth-slo-sli-recordings-checkout-order-integrity
+  rules:
+  - record: slo:sli_error:ratio_rate5m
+    expr: |
+      ((sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart",status_code="STATUS_CODE_ERROR"}[5m])) or vector(0)))
+      /
+      (sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart"}[5m])))
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+      sloth_window: 5m
+  - record: slo:sli_error:ratio_rate30m
+    expr: |
+      ((sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart",status_code="STATUS_CODE_ERROR"}[30m])) or vector(0)))
+      /
+      (sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart"}[30m])))
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+      sloth_window: 30m
+  - record: slo:sli_error:ratio_rate1h
+    expr: |
+      ((sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart",status_code="STATUS_CODE_ERROR"}[1h])) or vector(0)))
+      /
+      (sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart"}[1h])))
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+      sloth_window: 1h
+  - record: slo:sli_error:ratio_rate2h
+    expr: |
+      ((sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart",status_code="STATUS_CODE_ERROR"}[2h])) or vector(0)))
+      /
+      (sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart"}[2h])))
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+      sloth_window: 2h
+  - record: slo:sli_error:ratio_rate6h
+    expr: |
+      ((sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart",status_code="STATUS_CODE_ERROR"}[6h])) or vector(0)))
+      /
+      (sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart"}[6h])))
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+      sloth_window: 6h
+  - record: slo:sli_error:ratio_rate1d
+    expr: |
+      ((sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart",status_code="STATUS_CODE_ERROR"}[1d])) or vector(0)))
+      /
+      (sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart"}[1d])))
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+      sloth_window: 1d
+  - record: slo:sli_error:ratio_rate3d
+    expr: |
+      ((sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart",status_code="STATUS_CODE_ERROR"}[3d])) or vector(0)))
+      /
+      (sum(rate(traces_span_metrics_calls_total{service_name="cart",span_kind="SPAN_KIND_SERVER", span_name="POST /oteldemo.CartService/EmptyCart"}[3d])))
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+      sloth_window: 3d
+  - record: slo:sli_error:ratio_rate30d
+    expr: |
+      sum_over_time(slo:sli_error:ratio_rate5m{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"}[30d])
+      / ignoring (sloth_window)
+      count_over_time(slo:sli_error:ratio_rate5m{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"}[30d])
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+      sloth_window: 30d
+- name: sloth-slo-meta-recordings-checkout-order-integrity
+  rules:
+  - record: slo:objective:ratio
+    expr: vector(0.9990000000000001)
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+  - record: slo:error_budget:ratio
+    expr: vector(1-0.9990000000000001)
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+  - record: slo:time_period:days
+    expr: vector(30)
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+  - record: slo:current_burn_rate:ratio
+    expr: |
+      slo:sli_error:ratio_rate5m{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"}
+      / on(sloth_id, sloth_slo, sloth_service) group_left
+      slo:error_budget:ratio{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"}
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+  - record: slo:period_burn_rate:ratio
+    expr: |
+      slo:sli_error:ratio_rate30d{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"}
+      / on(sloth_id, sloth_slo, sloth_service) group_left
+      slo:error_budget:ratio{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"}
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+  - record: slo:period_error_budget_remaining:ratio
+    expr: 1 - slo:period_burn_rate:ratio{sloth_id="checkout-order-integrity", sloth_service="checkout",
+      sloth_slo="order-integrity"}
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_service: checkout
+      sloth_slo: order-integrity
+  - record: sloth_slo_info
+    expr: vector(1)
+    labels:
+      cuj: checkout
+      owner: sre-lab
+      sloth_id: checkout-order-integrity
+      sloth_mode: cli-gen-prom
+      sloth_objective: "99.9"
+      sloth_service: checkout
+      sloth_slo: order-integrity
+      sloth_spec: prometheus/v1
+      sloth_version: v0.16.0
+- name: sloth-slo-alerts-checkout-order-integrity
+  rules:
+  - alert: CheckoutOrderIntegrityBudgetBurn
+    expr: |
+      (
+          max(slo:sli_error:ratio_rate5m{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
+          and
+          max(slo:sli_error:ratio_rate1h{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
+      )
+      or
+      (
+          max(slo:sli_error:ratio_rate30m{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"} > (6 * 0.0009999999999999432)) without (sloth_window)
+          and
+          max(slo:sli_error:ratio_rate6h{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"} > (6 * 0.0009999999999999432)) without (sloth_window)
+      )
+    labels:
+      category: correctness
+      severity: page
+      sloth_severity: page
+    annotations:
+      runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/checkout-order-integrity.md
+      summary: Orders are completing without clearing the cart (duplicate-order risk).
+      title: (page) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget
+        burn rate is too fast.
+  - alert: CheckoutOrderIntegrityBudgetBurn
+    expr: |
+      (
+          max(slo:sli_error:ratio_rate2h{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"} > (3 * 0.0009999999999999432)) without (sloth_window)
+          and
+          max(slo:sli_error:ratio_rate1d{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"} > (3 * 0.0009999999999999432)) without (sloth_window)
+      )
+      or
+      (
+          max(slo:sli_error:ratio_rate6h{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"} > (1 * 0.0009999999999999432)) without (sloth_window)
+          and
+          max(slo:sli_error:ratio_rate3d{sloth_id="checkout-order-integrity", sloth_service="checkout", sloth_slo="order-integrity"} > (1 * 0.0009999999999999432)) without (sloth_window)
+      )
+    labels:
+      category: correctness
+      severity: ticket
+      sloth_severity: ticket
+    annotations:
+      runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/checkout-order-integrity.md
+      summary: Orders are completing without clearing the cart (duplicate-order risk).
+      title: (ticket) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget
+        burn rate is too fast.

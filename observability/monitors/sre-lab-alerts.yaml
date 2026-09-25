@@ -15,12 +15,14 @@ spec:
         # P1-ISSUE-16 / P2-ISSUE-15: when telemetry stops, SLIs go blank (not red) and burn-rate
         # alerts CANNOT fire. Losing sight of a critical journey is itself page-worthy.
         - alert: SLIDataMissing
-          expr: (count(slo:sli_error:ratio_rate5m) or vector(0)) < 5
+          # Self-maintaining: compares against the number of DEFINED objectives. A hard-coded "< 5" silently
+          # broke when a 6th SLO was added in Phase 4 (P4-ISSUE-2).
+          expr: count(slo:objective:ratio) - (count(slo:sli_error:ratio_rate5m) or vector(0)) > 0
           for: 10m
           labels:
             severity: page
           annotations:
-            summary: "SLO data missing: {{ $value }} of 5 SLIs are reporting. Burn-rate alerts are blind."
+            summary: "SLO data missing: {{ $value }} SLI(s) not reporting. Burn-rate alerts for them are blind."
             runbook: "https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/sli-data-missing.md"
 
         - alert: TelemetryPipelineStale

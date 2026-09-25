@@ -34,7 +34,10 @@ We chose them from a measured baseline and marked them **provisional**, because 
 | **Classify by HTTP status (5xx + 422)**, not span status | **A 50% checkout outage was invisible**: failed orders return 422, and OTel only marks 5xx server spans as errors | **P1-ISSUE-11** |
 | Include `/api/recommendations` in browse | A drill showed it was the **largest** error source, with no SLO covering it | P2-ISSUE-21 |
 
+| Add a **correctness** SLO (`checkout-order-integrity`) | Game Day 1: 46% of orders were **charged with the cart not cleared**; checkout returned 200, so every SLI stayed at 100% | P4-ISSUE-1 |
+
 **Lesson, the most important one in the lab:** *an SLI you haven't tested with an injected failure is a hypothesis, not a measurement.*
+And availability plus latency aren't enough: **"succeeded but did the wrong thing" needs its own correctness SLI.**
 
 ---
 
@@ -159,7 +162,7 @@ The same honesty applies to "fixed" claims: P2-ISSUE-10 was re-opened when the e
 | Monitoring & observability | ✅ platform + cross-signal links + self-monitoring | Phase 2 |
 | Alerting & on-call routing | ✅ end to end via alert sink; ⏳ real PagerDuty/Slack | Phase 3 |
 | Toil & automation | ✅ ongoing | all phases |
-| Incident management & postmortems | ⏭️ next | Phase 4 |
+| Incident management & postmortems | 🔄 GD1 done: blameless postmortem, 6 action items, 3 done | Phase 4 |
 | Chaos & resilience | partial (thrashing, readiness, Loki ring found) | Phase 5 |
 | Capacity | partial (sized from measurement) | Phase 6 |
 | Release engineering / GitOps | partial (pinning, drift) | Phase 7 |
