@@ -1,6 +1,17 @@
-# Overrides for the opentelemetry-demo Helm chart.
-# Upstream defaults: https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-demo
+# Overrides for the opentelemetry-demo Helm chart (pinned in the Makefile: CHART_VERSION).
+# Upstream defaults: helm show values open-telemetry/opentelemetry-demo --version <CHART_VERSION>
 #
-# Start with the defaults (bundled Prometheus, Grafana, Jaeger, OpenSearch, load generator).
-# Phase 2 of the roadmap replaces the bundled observability stack with kube-prometheus-stack.
-{}
+# Phase 0 keeps the bundled observability stack (Prometheus, Grafana, Jaeger, OpenSearch).
+# Phase 2 replaces it with kube-prometheus-stack + Tempo + Loki.
+
+components:
+  # AI assistant components (demo 3.x). They need an external LLM endpoint + API key
+  # (defaults point at a placeholder URL with an empty key), so they'd crash-loop and add
+  # noise unrelated to the shop's user journeys. Disabled for the lab; saves ~1.5 GB.
+  # See docs/labs/phase-0-foundation.md -> Issues log, ISSUE-3.
+  agent:
+    enabled: false
+  chatbot:
+    enabled: false
+  mcp:
+    enabled: false

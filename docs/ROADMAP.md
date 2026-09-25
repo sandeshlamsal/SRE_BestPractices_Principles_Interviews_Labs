@@ -9,9 +9,11 @@ The local-vs-cloud comparison and principle coverage for every phase are in [lab
 
 ## Phase 0: Foundation (this commit)
 - [x] Repo structure, operating model ([sre-way.md](sre-way.md)), ADR, templates
-- [ ] Bring up the kind cluster and deploy the shop (`make cluster-up deploy open`)
-- [ ] Walk through the app: browse, add to cart, check out. Open Grafana, Jaeger, and the flag UI.
-- [ ] Draw the service dependency map from Jaeger (`docs/architecture.md`)
+- [x] Bring up the kind cluster and deploy the shop (`make cluster-up deploy open`)
+- [x] Walk through the app: browse, add to cart, check out. Open Grafana, Jaeger, and the flag UI.
+- [x] Draw the service dependency map from Jaeger (`docs/architecture.md`)
+
+📘 **Execution guide:** [labs/phase-0-foundation.md](labs/phase-0-foundation.md), with every command, output, and issue (done 2026-09-25)
 
 **Exit:** the shop runs, and you can trace one checkout request end to end.
 **Interview:** "Walk me through what happens when a user clicks *Place order*."

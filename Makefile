@@ -1,6 +1,8 @@
 CLUSTER   := sre-lab
 NAMESPACE := astronomy-shop
 RELEASE   := shop
+# Pinned so the lab is reproducible. Bump deliberately and note it in docs/labs/.
+CHART_VERSION := 0.42.0
 
 .PHONY: help cluster-up cluster-down deploy undeploy status open
 
@@ -9,6 +11,7 @@ help: ## Show targets
 
 cluster-up: ## Create the local kind cluster
 	kind create cluster --config platform/kind/cluster.yaml
+	kubectl wait --for=condition=Ready nodes --all --timeout=180s
 
 cluster-down: ## Delete the local kind cluster
 	kind delete cluster --name $(CLUSTER)
@@ -16,7 +19,7 @@ cluster-down: ## Delete the local kind cluster
 deploy: ## Install/upgrade the Astronomy Shop
 	helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts >/dev/null 2>&1 || true
 	helm repo update open-telemetry
-	helm upgrade --install $(RELEASE) open-telemetry/opentelemetry-demo \
+	helm upgrade --install $(RELEASE) open-telemetry/opentelemetry-demo --version $(CHART_VERSION) \
 	  --namespace $(NAMESPACE) --create-namespace \
 	  -f apps/astronomy-shop/values.yaml --wait --timeout 15m
 

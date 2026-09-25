@@ -31,6 +31,7 @@ flowchart LR
   fe --> ship[shipping<br/>Rust]
   fe --> co[checkout<br/>Go]
   rec --> pc
+  pc --> db[(astronomy-db<br/>Postgres)]
   cart --> valkey[(valkey)]
   ship --> quote[quote<br/>PHP]
   co --> cart & pc & cur & ship
@@ -42,8 +43,15 @@ flowchart LR
   flagd[flagd<br/>feature flags] -.-> ad & rec & pc & pay & cart & kafka
 ```
 
-The exact set of services depends on the demo version. Newer releases add services such as
-product reviews. Run `make status` to see what's actually deployed.
+Verified on chart **0.42.0 / demo 3.1.0** (Phase 0): `product-catalog` reads from **astronomy-db**
+(Postgres), and there are also `opamp-server` (collector management) and `telemetry-docs`. The AI
+components (`agent`, `chatbot`, `mcp`) are **turned off** in this lab because they need an external LLM
+(see [phase-0 ISSUE-3](labs/phase-0-foundation.md#issues-log)). Run `make status` to see what's
+deployed.
+
+**Measured checkout critical path** (from a real trace, ~47 ms): checkout → cart (valkey) →
+product-catalog (astronomy-db) ×N → currency ×N → shipping → quote → payment → shipping (ship) →
+cart (empty, flagd) → email → Kafka publish. Walkthrough in [phase-0 Step 6](labs/phase-0-foundation.md#step-6-trace-one-checkout-from-end-to-end-the-exit-criterion).
 
 ## Where each SRE concept lands in the architecture
 
