@@ -1,0 +1,10 @@
+.DS_Store
+*.log
+.env
+.env.*
+kubeconfig*
+*.tfstate*
+.terraform/
+.idea/
+.vscode/
+tmp/

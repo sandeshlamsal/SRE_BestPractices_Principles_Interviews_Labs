@@ -1,0 +1,83 @@
+# Roadmap: Learning SRE on the Astronomy Shop
+
+Each phase ends with **exit criteria** and **interview takeaways**, so the lab work
+also prepares you for interviews. Aim for about one phase per week.
+
+---
+
+## Phase 0: Foundation (this commit)
+- [x] Repo structure, operating model ([sre-way.md](sre-way.md)), ADR, templates
+- [ ] Bring up the kind cluster and deploy the shop (`make cluster-up deploy open`)
+- [ ] Walk through the app: browse, add to cart, check out. Open Grafana, Jaeger, and the flag UI.
+- [ ] Draw the service dependency map from Jaeger (`docs/architecture.md`)
+
+**Exit:** the shop runs, and you can trace one checkout request end to end.
+**Interview:** "Walk me through what happens when a user clicks *Place order*."
+
+## Phase 1: SLIs & SLOs
+- [ ] Pick 3 critical user journeys: **browse catalog**, **add to cart**, **checkout**
+- [ ] Define availability and latency SLIs at the edge (frontend-proxy / Envoy metrics)
+- [ ] Write SLO docs in `slos/` using the template, then generate the rules with [Sloth](https://sloth.dev) or [Pyrra](https://github.com/pyrra-dev/pyrra)
+- [ ] Error-budget dashboard in Grafana
+
+**Exit:** each journey shows its SLI, target, and remaining budget.
+**Interview:** SLI vs SLO vs SLA; why not 100%; how to choose a target.
+
+## Phase 2: Observability platform
+- [ ] Replace the bundled stack with **kube-prometheus-stack** (Prometheus, Alertmanager, Grafana), plus **Loki** for logs and **Tempo** or Jaeger for traces
+- [ ] RED dashboards per service, a USE dashboard for nodes, and a golden-signals overview
+- [ ] Link from metrics to traces (exemplars) and from traces to logs
+
+**Exit:** go from an alert → dashboard → trace → log line in under 2 minutes.
+**Interview:** RED vs USE, the four golden signals, cardinality problems.
+
+## Phase 3: Alerting & on-call
+- [ ] Multi-window, multi-burn-rate SLO alerts (from Phase 1)
+- [ ] Alertmanager routing: page vs ticket, grouping, inhibition, silences
+- [ ] A runbook for every paging alert in `runbooks/`
+- [ ] Optional: route pages to a free PagerDuty or Grafana OnCall tier
+
+**Exit:** every page is symptom-based, actionable, and links to a runbook.
+**Interview:** alert fatigue, and why to alert on burn rate rather than thresholds.
+
+## Phase 4: Incident response game days
+Use flagd flags to inject real failures and run each one as a full incident, with IC, timeline, and postmortem:
+- [ ] `paymentFailure`: checkout errors
+- [ ] `productCatalogFailure`: errors on one product
+- [ ] `adServiceHighCpu` / `adServiceManualGc`: latency and saturation
+- [ ] `kafkaQueueProblems`: async backlog and consumer lag
+- [ ] `recommendationCacheFailure`: a memory leak
+- [ ] `loadGeneratorFloodHomepage`: a traffic spike
+
+Write a postmortem in `postmortems/` for each one.
+**Exit:** 5+ postmortems. Measure MTTD and MTTR for each and watch them improve.
+**Interview:** "Tell me about an incident you handled." You'll have real ones to talk about.
+
+## Phase 5: Chaos engineering & resilience
+- [ ] Install **Chaos Mesh** or **LitmusChaos**
+- [ ] Experiments with a hypothesis: pod kill, node drain, network latency and packet loss, DNS failure
+- [ ] Add PodDisruptionBudgets, readiness and liveness probes, resource requests and limits, HPA, and retries with timeouts where they're missing
+
+**Exit:** the checkout SLO holds through the loss of one node.
+**Interview:** cascading failures, retries vs retry storms, circuit breakers, graceful degradation.
+
+## Phase 6: Capacity & performance
+- [ ] Load test with **k6** or Locust; find the saturation point of the checkout path
+- [ ] Tune HPAs from the results and write a capacity plan
+
+**Interview:** Little's Law, headroom, and forecasting.
+
+## Phase 7: Release engineering & GitOps
+- [ ] Manage all manifests with **Argo CD**
+- [ ] **Argo Rollouts** canary with automated analysis on SLIs; roll back automatically on budget burn
+- [ ] CI with GitHub Actions: lint, kubeconform, and policy checks
+
+**Interview:** deployment strategies, and how error budgets gate releases.
+
+## Phase 8: Infrastructure as Code & cloud (optional)
+- [ ] Terraform an EKS or GKE cluster and repeat Phases 1–7 there
+- [ ] Measure cost against reliability trade-offs
+
+## Ongoing: Interview prep (`interviews/`)
+- SRE fundamentals Q&A, Linux and networking troubleshooting, system design with a reliability focus
+- A STAR story for each postmortem you write

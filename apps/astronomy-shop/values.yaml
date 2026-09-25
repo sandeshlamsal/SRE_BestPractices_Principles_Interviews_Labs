@@ -1,0 +1,6 @@
+# Overrides for the opentelemetry-demo Helm chart.
+# Upstream defaults: https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-demo
+#
+# Start with the defaults (bundled Prometheus, Grafana, Jaeger, OpenSearch, load generator).
+# Phase 2 of the roadmap replaces the bundled observability stack with kube-prometheus-stack.
+{}
