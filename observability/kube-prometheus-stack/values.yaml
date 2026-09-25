@@ -61,6 +61,12 @@ prometheus:
 
 alertmanager:
   alertmanagerSpec:
+    # Global routing config = an AlertmanagerConfig CR in this namespace (Phase 3).
+    #   sre-lab-sink : all receivers -> in-cluster alert-sink (no credentials needed; e2e tests)
+    #   sre-lab      : PagerDuty + Slack (needs Secret alerting-secrets)  -> switch with `make alerting`
+    # Kept in values (not only `kubectl patch`) so a helm upgrade can't silently revert it (P3-ISSUE-8).
+    alertmanagerConfiguration:
+      name: sre-lab-sink
     storage:
       volumeClaimTemplate:
         spec:
@@ -68,7 +74,6 @@ alertmanager:
           resources:
             requests:
               storage: 1Gi
-  # Routing to PagerDuty/Slack is configured in Phase 3.
 
 grafana:
   admin:

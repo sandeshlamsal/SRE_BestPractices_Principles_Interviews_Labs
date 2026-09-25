@@ -3,7 +3,7 @@
 > **Goal:** every alert that reaches a human is **symptom-based, actionable, routed to the right place, and linked to a runbook**.
 > Pages go to PagerDuty + Slack `#pages`; tickets go to Slack `#alerts` ([ADR-0003](../adr/0003-paging-and-incident-tooling.md)).
 > **Principles practiced:** [03 Monitoring & alerting](../principles/03-monitoring-alerting.md), [04 Incident management](../principles/04-incident-management.md), [09 On-call health](../principles/09-culture-oncall.md).
-> **Status (2026-09-25):** alerts, runbooks and routing config done; **waiting on the Slack/PagerDuty secret** to wire and test delivery end to end.
+> **Status (2026-09-25):** alerts, runbooks, routing and **end-to-end delivery (via the in-cluster alert sink) done and tested**. Remaining: switch to real PagerDuty/Slack once `alerting-secrets` exists, then measure time to acknowledge on a phone.
 
 ---
 
@@ -102,6 +102,57 @@ then asserts the receivers for 11 alerts (`amtool config routes test`). Result: 
 
 Routing is code, so it gets tests. Run this in CI (Phase 7) so a routing change can't silently stop pages.
 
+## Step 5: End-to-end delivery through an in-cluster alert sink
+
+To test the **whole** path (SLI → burn rate → Alertmanager routing, grouping, inhibition → delivered notification)
+without PagerDuty/Slack credentials, all receivers are pointed at [alert-sink](../../observability/alerting/alert-sink.yaml),
+a 25-line Python webhook that logs every notification. The URL path is the receiver Alertmanager chose.
+
+```bash
+make alerting-sink        # generates alertmanagerconfig-sink.yaml from the REAL CR (same routes/inhibitions),
+                          # deploys alert-sink, points Alertmanager at it
+kubectl -n observability logs deploy/alert-sink -f      # watch notifications arrive
+```
+The switch lives in [kube-prometheus-stack values](../../observability/kube-prometheus-stack/values.yaml)
+(`alertmanagerSpec.alertmanagerConfiguration.name: sre-lab-sink` → `sre-lab`), **not only** in a `kubectl patch`,
+because the next `helm upgrade` would silently revert a patch (P3-ISSUE-8).
+
+Check that Alertmanager loaded it:
+```bash
+kubectl -n observability get secret alertmanager-kps-alertmanager-generated -o jsonpath='{.data.alertmanager\.yaml\.gz}' \
+  | base64 -d | gunzip | grep -E "url:|receiver:"
+```
+**First deliveries (18:22 UTC):** 4 tickets on `/slack-alerts`: three SLO budget burns left over from the drills, and
+**`OtelCollectorExportFailing`**, where the new alert caught the residual P2-ISSUE-10 400s by itself.
+
+### E2E page test (`paymentFailure` 50%)
+
+| Time (UTC) | Event | Delivered to |
+|---|---|---|
+| 18:24:22 | `scripts/flag.sh set paymentFailure 50%` | |
+| 18:27:41 | 🎫 ticket `CheckoutAvailabilityBudgetBurn` (slow-burn window crossed first) | `/slack-alerts` |
+| **18:29:51** | 🚨 **page** `CheckoutAvailabilityBudgetBurn`, with the runbook URL in the payload | **`/pagerduty` + `/slack-pages`** (same second, so `continue: true` fan-out works) |
+| 18:30:13 | Mitigation: `scripts/flag.sh reset` | |
+| **18:39:51** | ✅ **RESOLVED** page (591 s after mitigation: the 30m/6h pair had to fall below 3%; a short 5.5-min incident clears faster than Phase 1's ~30 min) | `/pagerduty` + `/slack-pages` |
+
+**Time from injection to page = 332 s** (SLI lag ~2.5 min + the 1h window needing > 7.2% errors).
+
+**Inhibition, checked in Alertmanager's API:**
+```bash
+kubectl -n observability exec alertmanager-kps-alertmanager-0 -c alertmanager -- \
+  wget -qO- 'http://localhost:9093/api/v2/alerts?active=true&inhibited=true' | python3 -c "
+import json,sys
+for a in json.load(sys.stdin): print(a['labels']['alertname'], a['labels'].get('severity'), a['status']['state'], len(a['status']['inhibitedBy']))"
+```
+| Alert | State |
+|---|---|
+| CheckoutAvailabilityBudgetBurn **ticket** | **suppressed** (inhibited by the checkout page) |
+| CheckoutAvailabilityBudgetBurn page | active |
+| Other SLOs' tickets | active (the `equal: [alertname, sloth_id]` scoping is correct) |
+
+⚠️ The ticket was **delivered before** the page existed (18:27:41). Inhibition only suppresses notifications *while* the source
+alert fires, so the ordering of windows matters (P3-ISSUE-9).
+
 ### ⏳ Pending: create the secret (you), then wire it up
 1. Slack: workspace + channels `#pages`, `#alerts` → an app with **Incoming Webhooks** → one webhook per channel.
 2. PagerDuty (free): service `astronomy-shop` → Integrations → **Events API V2** → copy the Integration Key.
@@ -127,3 +178,29 @@ make alerting     # refuses to run until the secret exists
 | P3-ISSUE-5 | Detection | A partial failure (1 of 10 products, 8% errors) needs ~11 min to page | The page condition needs **both** 5m and 1h above 14.4 × 0.1%; the 1h average dilutes a new partial failure | By design (multi-window avoids flapping); record time to detect per scenario |
 | P3-ISSUE-6 | Alerting | `SLIDataMissing` pending during the sleep gap | Real data loss (the VM was frozen) | **Worked as designed.** In real life a gap like that should page |
 | P3-ISSUE-7 | Tooling | `$AM config routes test ...` → `no such file or directory: docker run ...` | zsh doesn't word-split `$VAR` (same as P2-ISSUE-13) | Put multi-word commands in bash scripts or functions: `scripts/test-alert-routing.sh` |
+| P3-ISSUE-8 | Config drift | Pointing Alertmanager at a config with `kubectl patch` works, until the next `helm upgrade kps` silently reverts it | Helm owns the `Alertmanager` resource; manual patches are drift | Keep the choice in values (`alertmanagerConfiguration.name`). `make alerting` / `alerting-sink` patch *and* the values file records the intended state. GitOps (Phase 7) removes this class of problem |
+| P3-ISSUE-9 | Inhibition | The checkout **ticket** reached #alerts 2 min *before* the page | The slow-burn ticket windows (3x over 1d+2h) crossed their threshold before the page's 1h window did. Inhibition can't un-send an earlier notification | Acceptable: one extra #alerts message. From the moment the page fires, the ticket is suppressed (verified in the API) |
+
+---
+
+## Phase 3 exit checklist
+
+- [x] Noise audit; kind-only noise disabled
+- [x] Alerts for every lesson of Phases 1–2 (blind SLIs, stale pipeline, collector, thrashing)
+- [x] A runbook for every alert; `make check-runbooks` (15/15)
+- [x] Routing as code with inhibitions; `make test-routing` (11/11)
+- [x] **E2E:** injected failure → page delivered to PagerDuty + Slack receivers in 332 s → resolved 591 s after mitigation (alert sink)
+- [x] Inhibition verified in the Alertmanager API
+- [ ] Real PagerDuty + Slack (`alerting-secrets` → `make alerting`), then time a phone acknowledgement
+- [ ] Production heartbeat: route `Watchdog` to a dead-man's switch (e.g. a healthchecks.io ping) so a dead Alertmanager or Prometheus pages someone
+
+## Re-run Phase 3 from scratch
+```bash
+make monitors          # platform alert rules
+make slo-rules         # SLO rules with runbook links
+make check-runbooks && make test-routing
+make alerting-sink     # e2e without credentials   (or: make alerting, once the secret exists)
+kubectl -n observability logs deploy/alert-sink -f &
+scripts/flag.sh set paymentFailure 50%    # expect a page in ~5-6 min on /pagerduty + /slack-pages
+scripts/flag.sh reset                     # expect RESOLVED ~10 min later
+```

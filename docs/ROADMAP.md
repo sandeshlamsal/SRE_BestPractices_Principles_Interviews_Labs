@@ -46,10 +46,10 @@ The local-vs-cloud comparison and principle coverage for every phase are in [lab
 
 ## Phase 3: Alerting & on-call
 📘 **Execution guide:** [labs/phase-3-alerting.md](labs/phase-3-alerting.md) (in progress)
-- [ ] Multi-window, multi-burn-rate SLO alerts (from Phase 1)
-- [ ] Alertmanager routing: page vs ticket, grouping, inhibition, silences
-- [ ] A runbook for every paging alert in `runbooks/`
-- [ ] Route pages to **PagerDuty** (free plan) with an escalation policy, mirrored to Slack `#pages`; tickets to Slack `#alerts`
+- [x] Multi-window, multi-burn-rate SLO alerts (from Phase 1)
+- [x] Alertmanager routing: page vs ticket, grouping, inhibition, silences (tested: `make test-routing`, e2e via alert-sink)
+- [x] A runbook for every paging alert in `runbooks/`
+- [~] Route pages to **PagerDuty** (free plan) with an escalation policy, mirrored to Slack `#pages`; tickets to Slack `#alerts` (config done + e2e tested; needs your `alerting-secrets`)
 
 **Exit:** every page is symptom-based, actionable, and links to a runbook.
 **Interview:** alert fatigue, and why to alert on burn rate rather than thresholds.
@@ -59,8 +59,8 @@ Use flagd flags to inject real failures and run each one as a full incident, wit
 - [ ] `paymentFailure`: checkout errors
 - [ ] `productCatalogFailure`: errors on one product
 - [ ] `adHighCpu` / `adManualGc`: latency and saturation
-- [ ] SLI-data-missing alert (`absent()`), found necessary in Phase 1 (P1-ISSUE-16)
-- [ ] Container memory-limit thrashing alert (`container_memory_failcnt` / major faults), found in Phase 2 (P2-ISSUE-15)
+- [x] SLI-data-missing alert, found necessary in Phase 1 (P1-ISSUE-16)
+- [x] Container memory-limit thrashing alert (`container_memory_failcnt`), found in Phase 2 (P2-ISSUE-15)
 - [ ] `kafkaQueueProblems`: async backlog and consumer lag
 - [ ] `recommendationCacheFailure`: a memory leak
 - [ ] `loadGeneratorFloodHomepage`: a traffic spike

@@ -1,0 +1,64 @@
+# alert-sink: a tiny webhook receiver that logs every Alertmanager notification it gets.
+# Used to test the FULL alert path end to end (routing, grouping, inhibition, timing) without
+# PagerDuty/Slack credentials, and as a permanent "canary" receiver. The URL path is the receiver
+# name Alertmanager intended (/pagerduty, /slack-pages, /slack-alerts).
+#   kubectl -n observability logs deploy/alert-sink -f
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alert-sink
+  namespace: observability
+data:
+  sink.py: |
+    import json, datetime
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    class H(BaseHTTPRequestHandler):
+        def do_POST(self):
+            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+            now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            for a in body.get("alerts", []):
+                l, an = a.get("labels", {}), a.get("annotations", {})
+                print(json.dumps({"received": now, "receiver": self.path.strip("/"), "status": a.get("status"),
+                                  "alertname": l.get("alertname"), "severity": l.get("severity"),
+                                  "sloth_id": l.get("sloth_id"), "startsAt": a.get("startsAt"),
+                                  "summary": an.get("summary"), "runbook": an.get("runbook")}), flush=True)
+            self.send_response(200); self.end_headers()
+        def log_message(self, *args): pass
+    HTTPServer(("", 8080), H).serve_forever()
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-sink
+  namespace: observability
+  labels: { app.kubernetes.io/name: alert-sink, app.kubernetes.io/part-of: sre-lab }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: alert-sink }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: alert-sink }
+    spec:
+      containers:
+        - name: sink
+          image: python:3.12-alpine
+          command: ["python", "-u", "/app/sink.py"]
+          ports: [{ name: http, containerPort: 8080 }]
+          readinessProbe: { tcpSocket: { port: 8080 }, periodSeconds: 5 }
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { memory: 64Mi }
+          volumeMounts: [{ name: app, mountPath: /app }]
+      volumes:
+        - name: app
+          configMap: { name: alert-sink }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-sink
+  namespace: observability
+spec:
+  selector: { app.kubernetes.io/name: alert-sink }
+  ports: [{ name: http, port: 8080, targetPort: http }]
