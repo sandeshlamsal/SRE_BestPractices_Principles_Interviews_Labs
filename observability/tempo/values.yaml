@@ -1,0 +1,28 @@
+# Grafana Tempo single binary (grafana-community/tempo, pinned in Makefile: TEMPO_VERSION).
+tempo:
+  reportingEnabled: false
+  retention: 72h
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+  # Service graph + span metrics -> Prometheus (Grafana service map)
+  metricsGenerator:
+    enabled: true
+    remoteWriteUrl: "http://kps-prometheus.observability:9090/api/v1/write"
+  # Processors are OFF per tenant by default (P2-ISSUE-8). Only service-graphs: span-metrics would
+  # duplicate the collector's span_metrics that our SLIs use (two sources = double counting).
+  overrides:
+    defaults:
+      metrics_generator:
+        processors:
+          - service-graphs
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 1Gi }
+persistence:
+  enabled: true
+  size: 5Gi

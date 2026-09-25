@@ -31,9 +31,13 @@ The local-vs-cloud comparison and principle coverage for every phase are in [lab
 **Interview:** SLI vs SLO vs SLA; why not 100%; how to choose a target.
 
 ## Phase 2: Observability platform
-- [ ] Replace the bundled stack with **kube-prometheus-stack** (Prometheus, Alertmanager, Grafana), plus **Loki** for logs and **Tempo** for traces
-- [ ] RED dashboards per service, a USE dashboard for nodes, and a golden-signals overview
-- [ ] Link from metrics to traces (exemplars) and from traces to logs
+- [x] Replace the bundled stack with **kube-prometheus-stack** (Prometheus, Alertmanager, Grafana), plus **Loki** for logs and **Tempo** for traces
+- [x] RED dashboards per service, a USE dashboard for nodes, and a golden-signals overview
+- [x] Link from metrics to traces (exemplars) and from traces to logs
+- [x] Monitor the telemetry pipeline itself (collector pull metrics + pipeline-health dashboard)
+- [ ] Resolve host memory pressure (P2-ISSUE-14) and OTLP 400s (P2-ISSUE-10)
+
+📘 **Execution guide:** [labs/phase-2-observability.md](labs/phase-2-observability.md) (in progress, 2026-09-25)
 
 **Exit:** go from an alert → dashboard → trace → log line in under 2 minutes.
 **Interview:** RED vs USE, the four golden signals, cardinality problems.

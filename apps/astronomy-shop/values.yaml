@@ -1,8 +1,9 @@
 # Overrides for the opentelemetry-demo Helm chart (pinned in the Makefile: CHART_VERSION).
 # Upstream defaults: helm show values open-telemetry/opentelemetry-demo --version <CHART_VERSION>
 #
-# Phase 0 keeps the bundled observability stack (Prometheus, Grafana, Jaeger, OpenSearch).
-# Phase 2 replaces it with kube-prometheus-stack + Tempo + Loki.
+# Phase 2: telemetry goes to the platform stack in the `observability` namespace
+# (kube-prometheus-stack + Tempo + Loki). The demo's bundled Prometheus/Grafana/Jaeger/OpenSearch
+# are disabled. History of the Phase 0/1 settings: docs/labs/phase-*.md.
 
 components:
   # AI assistant components (demo 3.x). They need an external LLM endpoint + API key
@@ -16,37 +17,89 @@ components:
   mcp:
     enabled: false
 
-prometheus:
-  # Phase 1: reload rule changes live (production habit) instead of restarting Prometheus.
-  # The configmap-reload sidecar calls /-/reload, which needs --web.enable-lifecycle.
-  configmapReload:
-    prometheus:
-      enabled: true
-  server:
-    # Helm REPLACES lists, so the chart's default flags must be repeated here.
-    extraFlags:
-      - "enable-feature=exemplar-storage"
-      - "web.enable-otlp-receiver"
-      - "web.enable-lifecycle"
-  # SLO recording + alerting rules are supplied by values-slo-rules.yaml (generated: make slo-rules).
+  frontend-proxy:
+    # Keep the single entry point: http://localhost:8080/grafana now serves the platform Grafana
+    # (served from sub-path /grafana, see observability/kube-prometheus-stack/values.yaml).
+    envOverrides:
+      - name: GRAFANA_HOST
+        value: kps-grafana.observability.svc.cluster.local
+      - name: GRAFANA_PORT
+        value: "80"
 
+# Bundled backends replaced by the platform stack (Phase 2).
+prometheus:
+  enabled: false
 grafana:
-  # Phase 1 ISSUE: Grafana was OOMKilled (exit 137) at the chart default 300Mi limit while rendering
-  # the SLO dashboard (5 repeated SLO rows × ~8 queries). Sized for real load, not the demo default.
-  # See docs/labs/phase-1-slos.md -> Issues log, P1-ISSUE-4.
-  resources:
-    requests:
-      memory: 384Mi
-    limits:
-      memory: 768Mi
+  enabled: false
+jaeger:
+  enabled: false
+opensearch:
+  enabled: false
 
 opentelemetry-collector:
+  # Expose the collector's own metrics on :8888 so Prometheus can PULL them directly.
+  # The demo only PUSHES self-telemetry back through the collector itself -- if the pipeline
+  # stalls, the metrics describing the stall stall too (see P1-ISSUE-16, P2 guide).
+  ports:
+    metrics:
+      enabled: true
   config:
+    receivers:
+      kubeletstats:
+        # kind's kubelet serving certs have no IP SANs (P1-ISSUE-17). Lab-only; NOT for EKS.
+        insecure_skip_verify: true
     connectors:
       span_metrics:
-        # Phase 1 P1-ISSUE-5: add HTTP status as a metric dimension so SLIs can classify
-        # failures by status code. OTel marks HTTP *server* spans ERROR only for 5xx, but the
-        # frontend returns 422 for failed checkouts -> status-based SLIs missed real failures.
+        # P1-ISSUE-11: add HTTP status as a metric dimension so SLIs can classify failures by
+        # status code. OTel marks HTTP *server* spans ERROR only for 5xx, but the frontend returns
+        # 422 for failed checkouts -> span-status SLIs missed real failures.
         dimensions:
           - name: http.response.status_code   # current semconv (frontend, most services)
           - name: http.status_code            # legacy semconv (Envoy frontend-proxy)
+    exporters:
+      # The chart's jaeger/opensearch/prometheus exporters stay *defined* (the collector chart
+      # deep-merges config in its template, so `key: null` can't delete them) but they're unused:
+      # the collector only starts exporters referenced by a pipeline. See P2 guide, P2-ISSUE-4.
+      otlp_http/platform-prometheus:
+        endpoint: http://kps-prometheus.observability:9090/api/v1/otlp
+        tls:
+          insecure: true
+        sending_queue:
+          batch: {}
+      otlp_grpc/platform-tempo:
+        endpoint: tempo.observability:4317
+        tls:
+          insecure: true
+        sending_queue:
+          batch: {}
+      otlp_http/platform-loki:
+        endpoint: http://loki.observability:3100/otlp
+        tls:
+          insecure: true
+        sending_queue:
+          batch: {}
+    service:
+      telemetry:
+        metrics:
+          level: detailed
+          readers:                       # Helm replaces lists: keep the demo's push reader + add pull
+            - periodic:
+                interval: 10000
+                timeout: 5000
+                exporter:
+                  otlp:
+                    protocol: http/protobuf
+                    endpoint: http://otel-collector:4318
+                    insecure: true
+            - pull:
+                exporter:
+                  prometheus:
+                    host: 0.0.0.0
+                    port: 8888
+      pipelines:
+        traces:
+          exporters: [otlp_grpc/platform-tempo, debug, span_metrics]
+        metrics:
+          exporters: [otlp_http/platform-prometheus, debug]
+        logs:
+          exporters: [otlp_http/platform-loki, debug]

@@ -1,0 +1,22 @@
+# Pull the OpenTelemetry Collector's own metrics directly (independent of its push pipeline).
+# Why: in Phase 1 (P1-ISSUE-16) telemetry stopped for 5 minutes and the collector's self-metrics
+# were pushed through the same pipeline, so they could not explain the gap.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: otel-collector
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  namespaceSelector:
+    matchNames: [astronomy-shop]
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opentelemetry-collector
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 15s
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node

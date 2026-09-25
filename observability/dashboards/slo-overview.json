@@ -23,7 +23,7 @@
         "type": "query",
         "datasource": {
           "type": "prometheus",
-          "uid": "webstore-metrics"
+          "uid": "prometheus"
         },
         "query": {
           "query": "label_values(slo:objective:ratio, sloth_id)",
@@ -64,7 +64,7 @@
       "title": "All SLOs: status at a glance",
       "datasource": {
         "type": "prometheus",
-        "uid": "webstore-metrics"
+        "uid": "prometheus"
       },
       "description": "One row per SLO. Budget colours follow the error-budget policy in docs/sre-way.md \u00a72: >50% green, 25-50% amber, <25% red.",
       "gridPos": {
@@ -77,7 +77,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max by (sloth_id) (slo:objective:ratio)",
           "legendFormat": "",
@@ -89,7 +89,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "1 - max by (sloth_id) (slo:sli_error:ratio_rate1d)",
           "legendFormat": "",
@@ -101,7 +101,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max by (sloth_id) (slo:current_burn_rate:ratio)",
           "legendFormat": "",
@@ -113,7 +113,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max by (sloth_id) (slo:period_error_budget_remaining:ratio)",
           "legendFormat": "",
@@ -309,7 +309,7 @@
       "description": "Target from slos/*.yaml",
       "datasource": {
         "type": "prometheus",
-        "uid": "webstore-metrics"
+        "uid": "prometheus"
       },
       "gridPos": {
         "x": 0,
@@ -321,7 +321,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max(slo:objective:ratio{sloth_id=\"$slo\"})",
           "legendFormat": "",
@@ -371,7 +371,7 @@
       "description": "Good/valid over the last 24h. Useful on short-lived lab clusters, where the 30d window is only partly filled.",
       "datasource": {
         "type": "prometheus",
-        "uid": "webstore-metrics"
+        "uid": "prometheus"
       },
       "gridPos": {
         "x": 4,
@@ -383,7 +383,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "1 - max(slo:sli_error:ratio_rate1d{sloth_id=\"$slo\"})",
           "legendFormat": "",
@@ -433,7 +433,7 @@
       "description": "1 - (budget consumed over the 30d window). Status follows the budget policy: >50% ship freely \u00b7 25-50% caution \u00b7 <25% reliability first.",
       "datasource": {
         "type": "prometheus",
-        "uid": "webstore-metrics"
+        "uid": "prometheus"
       },
       "gridPos": {
         "x": 9,
@@ -445,7 +445,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max(slo:period_error_budget_remaining:ratio{sloth_id=\"$slo\"})",
           "legendFormat": "",
@@ -503,7 +503,7 @@
       "description": "Error rate / error budget. 1x = budget runs out exactly at 30d. Page thresholds: 14.4x (1h) and 6x (6h).",
       "datasource": {
         "type": "prometheus",
-        "uid": "webstore-metrics"
+        "uid": "prometheus"
       },
       "gridPos": {
         "x": 14,
@@ -515,7 +515,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max(slo:current_burn_rate:ratio{sloth_id=\"$slo\"})",
           "legendFormat": "",
@@ -573,7 +573,7 @@
       "description": "Text form of the budget policy tier, so status is never shown by colour alone.",
       "datasource": {
         "type": "prometheus",
-        "uid": "webstore-metrics"
+        "uid": "prometheus"
       },
       "gridPos": {
         "x": 19,
@@ -585,7 +585,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max(slo:period_error_budget_remaining:ratio{sloth_id=\"$slo\"})",
           "legendFormat": "",
@@ -688,7 +688,7 @@
       "description": "Dashed lines = page thresholds: 14.4x (1h & 5m) and 6x (6h & 30m). Both windows must exceed a threshold for the alert to fire.",
       "datasource": {
         "type": "prometheus",
-        "uid": "webstore-metrics"
+        "uid": "prometheus"
       },
       "gridPos": {
         "x": 0,
@@ -700,7 +700,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max(slo:sli_error:ratio_rate5m{sloth_id=\"$slo\"}) / (1 - max(slo:objective:ratio{sloth_id=\"$slo\"}))",
           "legendFormat": "5m",
@@ -709,7 +709,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max(slo:sli_error:ratio_rate1h{sloth_id=\"$slo\"}) / (1 - max(slo:objective:ratio{sloth_id=\"$slo\"}))",
           "legendFormat": "1h",
@@ -718,7 +718,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max(slo:sli_error:ratio_rate6h{sloth_id=\"$slo\"}) / (1 - max(slo:objective:ratio{sloth_id=\"$slo\"}))",
           "legendFormat": "6h",
@@ -781,7 +781,7 @@
       "description": "How much of the 30-day budget is left. Starts at 100%, and every bad event lowers it.",
       "datasource": {
         "type": "prometheus",
-        "uid": "webstore-metrics"
+        "uid": "prometheus"
       },
       "gridPos": {
         "x": 12,
@@ -793,7 +793,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max(slo:period_error_budget_remaining:ratio{sloth_id=\"$slo\"})",
           "legendFormat": "budget remaining",
@@ -856,7 +856,7 @@
       "description": "Share of good events. When the SLI line falls below the objective line, the budget is burning faster than 1x.",
       "datasource": {
         "type": "prometheus",
-        "uid": "webstore-metrics"
+        "uid": "prometheus"
       },
       "gridPos": {
         "x": 0,
@@ -868,7 +868,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "1 - max(slo:sli_error:ratio_rate5m{sloth_id=\"$slo\"})",
           "legendFormat": "SLI 5m",
@@ -877,7 +877,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "1 - max(slo:sli_error:ratio_rate1h{sloth_id=\"$slo\"})",
           "legendFormat": "SLI 1h",
@@ -886,7 +886,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "webstore-metrics"
+            "uid": "prometheus"
           },
           "expr": "max(slo:objective:ratio{sloth_id=\"$slo\"})",
           "legendFormat": "objective",

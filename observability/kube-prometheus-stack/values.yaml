@@ -1,0 +1,118 @@
+# kube-prometheus-stack (chart pinned in Makefile: KPS_VERSION). Namespace: observability. Release: kps.
+# Phase 2 guide: docs/labs/phase-2-observability.md
+fullnameOverride: kps
+
+# --- kind: control-plane components listen on localhost only -> would show as DOWN and fire
+# --- false alerts. Disabled for the local lab; re-enable on EKS where scraping is possible.
+kubeControllerManager: { enabled: false }
+kubeScheduler: { enabled: false }
+kubeEtcd: { enabled: false }
+kubeProxy: { enabled: false }
+
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    retentionSize: 8GB
+    # Receive OTLP metrics pushed by the demo's OpenTelemetry Collector
+    enableOTLPReceiver: true
+    otlp:
+      keepIdentifyingResourceAttributes: true
+      promoteResourceAttributes:
+        - service.instance.id
+        - service.name
+        - service.namespace
+        - service.version
+        - deployment.environment.name
+        - k8s.namespace.name
+        - k8s.pod.name
+        - k8s.deployment.name
+        - k8s.node.name
+    # Tempo's metrics-generator remote-writes service-graph metrics
+    enableRemoteWriteReceiver: true
+    enableFeatures:
+      - exemplar-storage
+    tsdb:
+      outOfOrderTimeWindow: 30m        # OTLP pushes can arrive slightly out of order
+    # Pick up ALL PrometheusRules / ServiceMonitors / PodMonitors, not only ones labelled for this release
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests: { cpu: 200m, memory: 768Mi }
+      limits: { memory: 2Gi }
+    storageSpec:                        # persistent: history survives pod restarts (fixes P1-ISSUE-6)
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
+  # Routing to PagerDuty/Slack is configured in Phase 3.
+
+grafana:
+  admin:
+    existingSecret: grafana-admin       # created by `make obs-secrets` (never committed)
+    userKey: admin-user
+    passwordKey: admin-password
+  resources:
+    requests: { memory: 384Mi }
+    limits: { memory: 768Mi }           # P1-ISSUE-7: 300Mi was OOMKilled
+  serviceMonitor:
+    # serve_from_sub_path makes /metrics redirect to root_url (localhost:3000/grafana/metrics),
+    # which from Prometheus's side is itself -> target DOWN. Scrape the sub-path directly. (P2-ISSUE-6)
+    path: /grafana/metrics
+  grafana.ini:
+    server:
+      # Served behind the demo's Envoy at http://localhost:8080/grafana (single entry point)
+      root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+      serve_from_sub_path: true
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: ALL              # dashboards-as-code from any namespace
+    datasources:
+      uid: prometheus
+      exemplarTraceIdDestinations:      # metrics -> traces
+        datasourceUid: tempo
+        traceIdLabelName: trace_id
+  additionalDataSources:
+    - name: Tempo
+      uid: tempo
+      type: tempo
+      url: http://tempo.observability:3200
+      jsonData:
+        tracesToLogsV2:                 # traces -> logs
+          datasourceUid: loki
+          spanStartTimeShift: "-5m"
+          spanEndTimeShift: "5m"
+          filterByTraceID: true
+          customQuery: false
+        tracesToMetrics:
+          datasourceUid: prometheus
+        serviceMap:                     # service graph from Tempo metrics-generator
+          datasourceUid: prometheus
+        nodeGraph:
+          enabled: true
+    - name: Loki
+      uid: loki
+      type: loki
+      url: http://loki.observability:3100
+      jsonData:
+        derivedFields:                  # logs -> traces
+          - name: trace_id
+            matcherType: label
+            matcherRegex: trace_id
+            datasourceUid: tempo
+            url: "$${__value.raw}"
+            urlDisplayLabel: View trace
