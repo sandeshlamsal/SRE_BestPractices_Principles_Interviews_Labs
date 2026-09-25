@@ -66,7 +66,7 @@ grafana:
     passwordKey: admin-password
   resources:
     requests: { memory: 384Mi }
-    limits: { memory: 768Mi }           # P1-ISSUE-7: 300Mi was OOMKilled
+    limits: { memory: 1Gi }             # P1-ISSUE-7: 300Mi OOMKilled; P2-ISSUE-15: 967 limit hits at 768Mi
   serviceMonitor:
     # serve_from_sub_path makes /metrics redirect to root_url (localhost:3000/grafana/metrics),
     # which from Prometheus's side is itself -> target DOWN. Scrape the sub-path directly. (P2-ISSUE-6)

@@ -17,6 +17,27 @@ components:
   mcp:
     enabled: false
 
+  # --- Memory limits sized from MEASURED thrashing (P2-ISSUE-15). The chart's 20Mi limits made
+  # product-catalog hit its limit 644,293 times (1.86M major page faults, no OOM kill) -> checkout
+  # latency 100% > 1s and node-wide I/O pressure. Too-tight limits show up as LATENCY, not crashes.
+  product-catalog:
+    resources:
+      requests: { memory: 64Mi }
+      limits: { memory: 128Mi }
+  checkout:
+    resources:
+      requests: { memory: 32Mi }
+      limits: { memory: 64Mi }
+  flagd:
+    resources:
+      limits: { memory: 128Mi }
+  accounting:
+    resources:
+      limits: { memory: 256Mi }
+  fraud-detection:
+    resources:
+      limits: { memory: 384Mi }
+
   frontend-proxy:
     # Keep the single entry point: http://localhost:8080/grafana now serves the platform Grafana
     # (served from sub-path /grafana, see observability/kube-prometheus-stack/values.yaml).

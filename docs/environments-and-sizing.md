@@ -57,7 +57,7 @@ Settings → Resources:
 | Resource | Minimum (Phase 0–1) | **Recommended (all phases)** |
 |---|---|---|
 | CPUs | 4 | **6–8** |
-| Memory | 8 GB | **14–16 GB** (the full production-grade stack, see [tool-stack.md](tool-stack.md#4-resource-impact)) |
+| Memory | 8 GB | **12 GB** (measured in Phase 2: containers ~6–9 GB; at 16 GB the Docker VM grew to 26.6 GB RSS and starved macOS on a 32 GB Mac, see [P2-ISSUE-14](labs/phase-2-observability.md#issues-log)) |
 | Swap | 1 GB | 2 GB |
 | Disk image | 40 GB | **80 GB** |
 

@@ -35,7 +35,9 @@ The local-vs-cloud comparison and principle coverage for every phase are in [lab
 - [x] RED dashboards per service, a USE dashboard for nodes, and a golden-signals overview
 - [x] Link from metrics to traces (exemplars) and from traces to logs
 - [x] Monitor the telemetry pipeline itself (collector pull metrics + pipeline-health dashboard)
-- [ ] Resolve host memory pressure (P2-ISSUE-14) and OTLP 400s (P2-ISSUE-10)
+- [x] Resolve host memory pressure + container limit thrashing (P2-ISSUE-14/15)
+- [ ] OTLP 400s (P2-ISSUE-10)
+- [ ] Alert → dashboard → trace → log drill in under 2 minutes
 
 📘 **Execution guide:** [labs/phase-2-observability.md](labs/phase-2-observability.md) (in progress, 2026-09-25)
 
@@ -57,6 +59,7 @@ Use flagd flags to inject real failures and run each one as a full incident, wit
 - [ ] `productCatalogFailure`: errors on one product
 - [ ] `adHighCpu` / `adManualGc`: latency and saturation
 - [ ] SLI-data-missing alert (`absent()`), found necessary in Phase 1 (P1-ISSUE-16)
+- [ ] Container memory-limit thrashing alert (`container_memory_failcnt` / major faults), found in Phase 2 (P2-ISSUE-15)
 - [ ] `kafkaQueueProblems`: async backlog and consumer lag
 - [ ] `recommendationCacheFailure`: a memory leak
 - [ ] `loadGeneratorFloodHomepage`: a traffic spike

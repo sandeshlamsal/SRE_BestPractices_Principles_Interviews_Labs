@@ -11,7 +11,7 @@ built-in failure injection via feature flags. The reasons for this choice are in
 
 ## Quick start
 
-Prerequisites: Docker (give it **14–16 GB RAM, 6–8 CPUs**; see [sizing](docs/environments-and-sizing.md)), kind, kubectl, helm.
+Prerequisites: Docker (give it **12 GB RAM, 8 CPUs**; see [sizing](docs/environments-and-sizing.md)), kind, kubectl, helm.
 
 ```bash
 make cluster-up   # 3-node kind cluster

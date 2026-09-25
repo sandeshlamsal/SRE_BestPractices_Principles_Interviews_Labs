@@ -5,7 +5,7 @@
 > metrics ↔ traces ↔ logs, and **monitor the monitoring pipeline itself**.
 > **Principles practiced:** [03 Monitoring & alerting](../principles/03-monitoring-alerting.md), [06 Toil](../principles/06-toil-automation.md), simplicity.
 > **Executed:** 2026-09-25. Demo Helm revision 6; kps revision 2; Tempo revision 2; Loki revision 1.
-> **Status:** platform running and verified; **one blocker open**, host memory pressure (P2-ISSUE-14).
+> **Status:** platform running and verified. The host-memory blocker (P2-ISSUE-14) led to the **real root cause**, container memory-limit thrashing (P2-ISSUE-15), which was fixed with before/after proof.
 
 ---
 
@@ -175,12 +175,30 @@ Telemetry pipeline health: ![Pipeline](img-phase2-pipeline-health.png)
 | P2-ISSUE-11 | SLO | `browse-latency` showed 3.5% slow requests (3.5x burn); checkout p99 ~1.35s | The cutover itself: collectors and proxy restarting while worker CPU was at 117–240% | **Migrations spend error budget.** In production: schedule them, check the budget first, and announce them. Recovered to ~100ms | RED dashboard |
 | P2-ISSUE-12 | Alerts | `KubeAPIDown` firing after the Prometheus restart | During the restart the apiserver target was briefly absent; the alert uses `absent()` with `for:` | Restart artifact; `up{job="apiserver"}=1`. Phase 3 alert routing should suppress alerts during planned maintenance (silences) | apiserver up |
 | P2-ISSUE-13 | Tooling | A render loop failed: `no such file or directory: r-kps prometheus-...` | zsh doesn't split `$var` into words the way bash does | Use explicit arguments or a function | — |
-| **P2-ISSUE-14** | **Host capacity** | Telemetry stalls (0 span metrics for 10+ min), Prometheus's own scrapes sparse (2 per 5 min instead of 20), Locust down to 0.57 rps, `helm upgrade` took ~16 min | **The host Mac is out of memory**: Docker's VM uses **26.6 GB RSS** (above the 16 GB we set) on a 32 GB Mac; **112 MB free**, load avg 11.4, **63% CPU in kernel** | **Open, decision needed** (see below). This is the most likely root cause of **P1-ISSUE-16** (the Phase 1 telemetry gap) too | `top -l 1`, `ps` RSS by process |
+| **P2-ISSUE-14** | **Host capacity** | Telemetry stalls, sparse scrapes, `helm upgrade` took ~16 min | **Part 1:** the host Mac ran out of memory: Docker's VM used **26.6 GB** of 32 GB (above the 16 GB setting), 112 MB free | Docker memory **16 → 12 GB** (measured need ~9–11 GB), then restarted Docker (`docker desktop stop` → edit `settings-store.json` → `docker desktop start`). The kind nodes restarted by themselves and PVC data was kept. Host went from 112 MB to ~16 GB free on stop. **Not the whole story:** symptoms continued, see P2-ISSUE-15 | `top`: Docker VM 12G; swap 0.5 GB |
+| **P2-ISSUE-15** | **Resource limits (root cause)** | After the Docker fix: checkout latency SLI **100% > 1s**, span metrics **284 s** old, 5 scrapes/5 min instead of ~20, VM PSI memory-full 10% & io-full 8%, yet containers showed tiny CPU | **product-catalog's 20Mi limit** (chart default): it hit its limit **644,293 times** with **1.86M major page faults**, evicting and re-reading its own code from disk continuously. **No OOM kill, no restart, no alert**, just latency and node-wide I/O pressure. checkout (20Mi, 9,070 hits), flagd, accounting, fraud-detection and Grafana were also thrashing | Swept **every** container's `memory.events` (`max` count) and `pgmajfault` and raised limits from the data: product-catalog 128Mi, checkout 64Mi, flagd 128Mi, accounting 256Mi, fraud-detection 384Mi, Grafana 1Gi. **Most likely root cause of P1-ISSUE-16** too | Checkout latency SLI 1.0 → **0.0**; p99 **299 ms**; span-metric age 284 → **4 s**; PSI mem 10 → **0.19%**, io 7.9 → **0.30%**; helm upgrade 16 min → **31 s** |
+| P2-ISSUE-16 | Tooling | Wait loops hung until timeout | `awk '$2 !~ /^([0-9]+)\/\1$/'` uses a back-reference, which **macOS awk doesn't support**, so every pod looked "not ready" | Use `kubectl wait --for=condition=Ready pods --all -n <ns>` | Waits return immediately |
+| P2-ISSUE-17 | Diagnosis | Misleading signals during the investigation | (a) Prometheus per-pod CPU undercounted because its own samples were sparse; (b) Locust rps (~0.7–0.9) is capped by users × think time, so it's **not** a health signal; (c) kind nodes share **one VM kernel**, so `/proc/pressure` is VM-wide, not per node | Diagnose from the lowest layer that's still trustworthy: **cgroup files inside the node** (`memory.events`, `memory.stat`, `memory.pressure`) | — |
 
-### P2-ISSUE-14: options
+### How P2-ISSUE-14 and P2-ISSUE-15 were diagnosed (reusable method)
 
-| Option | Effect | Cost |
-|---|---|---|
+```bash
+# 1. Host: is the Mac itself starved?
+top -l 1 -n 0 | grep -E "PhysMem|Load Avg|CPU usage"
+top -l 2 -o cpu -n 8 -stats pid,command,cpu,mem | tail -9      # Docker VM = com.apple.Virtualization...
+# 2. VM kernel: where does the time go? (shared by all kind nodes)
+docker exec sre-lab-worker cat /proc/loadavg /proc/pressure/cpu /proc/pressure/memory /proc/pressure/io
+# 3. Which container? Sweep every container's cgroup for limit hits and major faults
+for n in sre-lab-worker sre-lab-worker2; do docker exec $n sh -c 'for d in $(find /sys/fs/cgroup/kubelet.slice -name "cri-containerd-*.scope" -type d); do
+  m=$(cat $d/memory.max); [ "$m" = max ] && continue
+  echo "$(grep "^max " $d/memory.events|cut -d" " -f2) $(grep "^pgmajfault " $d/memory.stat|cut -d" " -f2) $(cat $d/memory.current) $m $(basename $d|cut -c16-27)"; done' | sort -rn | head; done
+# map a container id to a name:  docker exec <node> crictl ps -a --id <id>
+```
+**Lesson:** a memory limit set too tight usually **doesn't OOM**. The kernel keeps reclaiming page cache (including the
+program's own code), so the service gets slow and drives I/O for everyone. Look at `memory.events: max`, not just OOM kills.
+Phase 3 turns this into an alert.
+
+---|---|---|
 | A. Restart Docker Desktop | The VM gives back its bloated memory; the kind cluster restarts (PVCs keep data) | ~5 min of downtime |
 | B. Lower Docker memory to 12 GB + restart | Leaves ~20 GB for macOS. Our measured peak need is ~9–11 GB | Same as A; a little less headroom for later phases |
 | C. Turn on Docker's *Resource Saver* / close heavy apps | Less pressure without a restart | May not be enough |
@@ -197,7 +215,7 @@ Recommended: **B**. It matches the measured need (see [environments-and-sizing](
 - [x] Metrics ↔ traces ↔ logs links configured (exemplars, tracesToLogs, derived fields, service map)
 - [x] RED, pipeline-health and SLO dashboards as code; USE dashboards from kps
 - [x] The monitoring is monitored (independent pull path)
-- [ ] P2-ISSUE-14 host memory, then re-verify stable ingestion for 30 min
+- [x] P2-ISSUE-14/15 host memory + container limit thrashing: fixed with before/after data
 - [ ] P2-ISSUE-10 OTLP 400s
 - [ ] The alert → dashboard → trace → log drill in under 2 minutes (after P2-ISSUE-14)
 
