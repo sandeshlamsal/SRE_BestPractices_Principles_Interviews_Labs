@@ -40,6 +40,9 @@ pages explain why those rules exist.
 
 ## Pages
 
+> **See it applied:** [sre-in-practice.md](../sre-in-practice.md) maps each principle to what the lab built, the evidence, and the lessons.
+
+
 | # | Topic | Roadmap phase |
 |---|---|---|
 | 01 | [SLIs, SLOs, SLAs](01-sli-slo-sla.md) | Phase 1 |

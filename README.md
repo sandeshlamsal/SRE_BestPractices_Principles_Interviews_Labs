@@ -20,6 +20,17 @@ make status
 make open         # http://localhost:8080
 ```
 
+## Progress
+
+| Phase | Status |
+|---|---|
+| 0 Foundation · 1 SLOs · 2 Observability | ✅ done |
+| 3 Alerting & on-call | ✅ done (real PagerDuty/Slack pending credentials) |
+| 4 Incident game days | ⏭️ next |
+
+Highlights: an SLI that was blind to a 50% outage, found and fixed; memory-limit thrashing with zero OOM kills;
+and a root cause we got **wrong** and corrected in the open ([sre-in-practice.md](docs/sre-in-practice.md)).
+
 ## Repository layout
 
 | Path | Purpose |
@@ -32,7 +43,8 @@ make open         # http://localhost:8080
 | [docs/sre-way.md](docs/sre-way.md) | Our SRE operating model: the principles and rules we follow |
 | [docs/principles/](docs/principles/) | SRE concepts (SLI/SLO/SLA, error budgets, incidents, postmortems, and more) mapped to this lab |
 | [docs/lab-matrix.md](docs/lab-matrix.md) | Phases × local vs cloud × SRE principle coverage |
-| [docs/labs/](docs/labs/) | **Step-by-step execution guides per phase**: commands, outputs, issues and fixes |
+| [docs/labs/](docs/labs/README.md) | **Step-by-step execution guides per phase**: commands, outputs, issues and fixes |
+| [docs/sre-in-practice.md](docs/sre-in-practice.md) | **What the lab proved**: each SRE principle → what we built → evidence → lesson |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Phased learning plan with labs and exit criteria |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 | [docs/templates/](docs/templates/) | SLO, runbook, and postmortem templates |
