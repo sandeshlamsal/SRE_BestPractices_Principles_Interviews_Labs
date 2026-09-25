@@ -5,7 +5,7 @@
 > metrics ↔ traces ↔ logs, and **monitor the monitoring pipeline itself**.
 > **Principles practiced:** [03 Monitoring & alerting](../principles/03-monitoring-alerting.md), [06 Toil](../principles/06-toil-automation.md), simplicity.
 > **Executed:** 2026-09-25. Demo Helm revision 6; kps revision 2; Tempo revision 2; Loki revision 1.
-> **Status:** platform running and verified. The host-memory blocker (P2-ISSUE-14) led to the **real root cause**, container memory-limit thrashing (P2-ISSUE-15), which was fixed with before/after proof.
+> **Status:** platform running and verified. ⚠️ **Correction:** the telemetry gaps and slow operations were caused by the **Mac idle-sleeping** (P2-ISSUE-19), not by memory thrashing as first concluded. The thrashing (P2-ISSUE-15) was real and fixed, but several before/after numbers attributed to it were confounded by sleep. See [the correction](#correction-a-wrong-root-cause-p2-issue-19).
 
 ---
 
@@ -171,14 +171,40 @@ Telemetry pipeline health: ![Pipeline](img-phase2-pipeline-health.png)
 | P2-ISSUE-7 | Tooling | `:8080` and `:9090` stopped responding after upgrades | `kubectl port-forward` attaches to a single pod; when it's replaced, the forward dies | Restart `make open` / `make prom` after rollouts. (Phase 7: a real Gateway removes this) | 200s after restart |
 | P2-ISSUE-8 | Tempo | Service graph had 0 edges | The metrics-generator processors are **off per tenant** by default | `overrides.defaults.metrics_generator.processors: [service-graphs]`. **Not `span-metrics`**, which would duplicate the collector's span metrics that the SLIs use | 27 edges |
 | P2-ISSUE-9 | Naming | `otelcol_exporter_sent_spans_total` returned nothing | The same metric has **different names by path**: pulled (`…_sent_spans`) vs pushed via OTLP (`…_total`) | Dashboards and alerts use the **pull** names | Pipeline dashboard populated |
-| **P2-ISSUE-10** | Ingestion | Collector on `sre-lab-worker`: HTTP **400**, 40 metric points dropped **every 60s** (~0.3% of points) | **Open.** Not SLI metrics (0 failures on span-metric series). Started when `kubeletstats` began working (P1-ISSUE-17 fix); Prometheus debug logs didn't show the reason | Next: temporarily add the `debug` exporter (detailed) to a metrics pipeline filtered to that node, find the rejected metric, then drop or rename it with a `transform`/`filter` processor | `otelcol_exporter_send_failed_metric_points` on the pipeline dashboard |
+| **P2-ISSUE-10** | Ingestion | Collector on `sre-lab-worker`: HTTP **400**, 40 metric points dropped **every 60s** | **Two writers per series.** Cluster-wide/host receivers (`kafkametrics`, `hostmetrics`) run in **both** DaemonSet collectors, and their data carried only `host.name`, which **wasn't a promoted label**. So both collectors wrote the *same* Prometheus series: `kafka_brokers` had **24 samples/2m instead of 12**, and host CPU from two nodes was interleaved into one garbage series. When a writer fell behind (P2-ISSUE-15 stall), its stale samples were rejected as permanent 400s | Promoted `host.name` in `prometheusSpec.otlp.promoteResourceAttributes`: now **12 samples/2m per host** (one writer each), and **0 failed points** over a 30-min watch. Cluster-scoped metrics (Kafka) are now 2 explicit copies, so use `max()` in queries. **Backlog:** a single-replica "cluster collector" for cluster-wide receivers (the production pattern) | `count_over_time(kafka_brokers[2m])` per host = 12; `otelcol_exporter_send_failed_metric_points` flat |
 | P2-ISSUE-11 | SLO | `browse-latency` showed 3.5% slow requests (3.5x burn); checkout p99 ~1.35s | The cutover itself: collectors and proxy restarting while worker CPU was at 117–240% | **Migrations spend error budget.** In production: schedule them, check the budget first, and announce them. Recovered to ~100ms | RED dashboard |
 | P2-ISSUE-12 | Alerts | `KubeAPIDown` firing after the Prometheus restart | During the restart the apiserver target was briefly absent; the alert uses `absent()` with `for:` | Restart artifact; `up{job="apiserver"}=1`. Phase 3 alert routing should suppress alerts during planned maintenance (silences) | apiserver up |
 | P2-ISSUE-13 | Tooling | A render loop failed: `no such file or directory: r-kps prometheus-...` | zsh doesn't split `$var` into words the way bash does | Use explicit arguments or a function | — |
 | **P2-ISSUE-14** | **Host capacity** | Telemetry stalls, sparse scrapes, `helm upgrade` took ~16 min | **Part 1:** the host Mac ran out of memory: Docker's VM used **26.6 GB** of 32 GB (above the 16 GB setting), 112 MB free | Docker memory **16 → 12 GB** (measured need ~9–11 GB), then restarted Docker (`docker desktop stop` → edit `settings-store.json` → `docker desktop start`). The kind nodes restarted by themselves and PVC data was kept. Host went from 112 MB to ~16 GB free on stop. **Not the whole story:** symptoms continued, see P2-ISSUE-15 | `top`: Docker VM 12G; swap 0.5 GB |
-| **P2-ISSUE-15** | **Resource limits (root cause)** | After the Docker fix: checkout latency SLI **100% > 1s**, span metrics **284 s** old, 5 scrapes/5 min instead of ~20, VM PSI memory-full 10% & io-full 8%, yet containers showed tiny CPU | **product-catalog's 20Mi limit** (chart default): it hit its limit **644,293 times** with **1.86M major page faults**, evicting and re-reading its own code from disk continuously. **No OOM kill, no restart, no alert**, just latency and node-wide I/O pressure. checkout (20Mi, 9,070 hits), flagd, accounting, fraud-detection and Grafana were also thrashing | Swept **every** container's `memory.events` (`max` count) and `pgmajfault` and raised limits from the data: product-catalog 128Mi, checkout 64Mi, flagd 128Mi, accounting 256Mi, fraud-detection 384Mi, Grafana 1Gi. **Most likely root cause of P1-ISSUE-16** too | Checkout latency SLI 1.0 → **0.0**; p99 **299 ms**; span-metric age 284 → **4 s**; PSI mem 10 → **0.19%**, io 7.9 → **0.30%**; helm upgrade 16 min → **31 s** |
+| **P2-ISSUE-15** | **Resource limits** | checkout latency SLI 100% > 1s; containers slow with little CPU | **product-catalog's 20Mi limit** (chart default): it hit its limit **644,293 times** with **1.86M major page faults** (kernel counters, so not affected by sleep). No OOM kill, no restart, no alert. checkout (20Mi, 9,070 hits), flagd, accounting, fraud-detection and Grafana were also hitting their limits | Swept every container's `memory.events` / `pgmajfault` and raised limits from the data (product-catalog 128Mi, checkout 64Mi, flagd 128Mi, accounting 256Mi, fraud-detection 384Mi, Grafana 1Gi). Limit hits went to **0/s** and stayed there | `rate(container_memory_failcnt[10m])` = 0 for all containers. ⚠️ The "helm 16 min → 31 s" and "span age 284 s → 4 s" comparisons were **confounded by host sleep** (P2-ISSUE-19) and don't prove this fix |
 | P2-ISSUE-16 | Tooling | Wait loops hung until timeout | `awk '$2 !~ /^([0-9]+)\/\1$/'` uses a back-reference, which **macOS awk doesn't support**, so every pod looked "not ready" | Use `kubectl wait --for=condition=Ready pods --all -n <ns>` | Waits return immediately |
 | P2-ISSUE-17 | Diagnosis | Misleading signals during the investigation | (a) Prometheus per-pod CPU undercounted because its own samples were sparse; (b) Locust rps (~0.7–0.9) is capped by users × think time, so it's **not** a health signal; (c) kind nodes share **one VM kernel**, so `/proc/pressure` is VM-wide, not per node | Diagnose from the lowest layer that's still trustworthy: **cgroup files inside the node** (`memory.events`, `memory.stat`, `memory.pressure`) | — |
+| **P2-ISSUE-18** | Fault injection | Drill: `productCatalogFailure` "on" for 11 min → **zero errors**, no alert | **Targeted flags:** flagd evaluates `targeting` *before* `defaultVariant`. This flag is `if product_id == OLJCESPC7Z then "off" else "off"`, so `flag.sh` changing `defaultVariant` did nothing, **while printing success** | `flag.sh` now detects targeted flags and sets the rule's *then* branch; `list` shows the *effective* variant and marks `(targeted)` | `GET /api/products/OLJCESPC7Z` → **500** with the flag on, 200 after reset |
+| **P2-ISSUE-19** | **Lab host** | Telemetry gaps (15 min), Prometheus's *own* self-metrics missing, Loki heartbeat lost, drill never paged, a 16-min `helm upgrade`, Phase 1's 5-min gap | **The Mac was on battery with `sleep 1` (idle sleep after 1 min).** When macOS sleeps, the **Docker VM freezes**: every process on every node stops, with no errors anywhere. `pmset -g log` matches every gap to the minute (table below) | `make awake` (`caffeinate -i -m -s`) while the lab runs, and stay on AC power. Detection: gaps in Prometheus's own `prometheus_tsdb_head_samples_appended_total` that line up with `pmset -g log` | All 5 unexplained events line up with sleep entries |
+| P2-ISSUE-20 | Automation | A drill reset the flag **1 s after** a newer drill's page fired, interfering with the live experiment | An earlier drill run was still in the background; the `pkill` pattern didn't match it, and nobody checked | Check with `pgrep -fl drill`; use one run at a time (a lock file / run ID); **verify cleanup, don't trust `pkill`** |
+| **P2-ISSUE-21** | **SLI coverage** | Drill: the **biggest error source** was `frontend GET /api/recommendations` (0.37 err/s), outside every SLO | Recommendations include the failing product, so "You may also like" breaks on product pages; the browse SLI only covered `/api/products*` | Added `GET /api/recommendations` to both browse SLIs (baseline p99 148 ms, 100% < 400 ms). **Drills don't just test alerts; they test SLI coverage** |
+
+### Correction: a wrong root cause (P2-ISSUE-19)
+
+In Phase 2 I concluded that product-catalog's memory thrashing caused the telemetry gaps, the slow Helm
+upgrade, and Phase 1's gap. **That was wrong.** Phase 3 found the real cause in the macOS power log:
+
+| Symptom | UTC | Local (CDT) | `pmset -g log` |
+|---|---|---|---|
+| Phase 1 telemetry gap (P1-ISSUE-16) | 11:17:28–11:22:36 | 06:17–06:22 | Sleep 06:17:16 → Wake 06:21:42 |
+| 16-minute `helm upgrade` | 11:54–12:10 | 06:54–07:10 | Sleep 06:54:49 → DarkWake 07:09:50 |
+| "284 s stale" span metrics | ~16:25–16:29 | 11:25–11:29 | Sleep 11:25:14 → Wake 11:29:16 |
+| Gap + no page in drill | 17:08–17:24 | 12:08–12:24 | Sleep 12:08:19 → Wake 12:24:10 |
+
+```bash
+pmset -g log | grep -E "Entering Sleep|Wake from"      # sleep/wake history
+pmset -g | grep -E " sleep|displaysleep"; pmset -g batt   # sleep 1 = idle sleep after 1 min
+```
+
+**What went wrong in the reasoning:** a real problem (thrashing, proven by kernel counters) was found at the same time as the
+symptoms, and a plausible story connected them. The before/after comparison **mixed the fix with sleep/wake timing**. The
+tell-tale sign was there: **every** process on **every** node stopped at the same moment with **no errors**, which is how a
+paused machine looks, not a slow service. **Lesson: correlation plus a good story isn't proof. Check timestamps against every layer, down to the host.**
 
 ### How P2-ISSUE-14 and P2-ISSUE-15 were diagnosed (reusable method)
 
@@ -207,6 +233,28 @@ Recommended: **B**. It matches the measured need (see [environments-and-sizing](
 
 ---
 
+## Step 7: Exit drill, alert → dashboard → trace → log
+
+Scripted version of the on-call click path (run it with `make awake` active):
+```bash
+scripts/flag.sh set productCatalogFailure on            # targeted flag: fails product OLJCESPC7Z only
+# wait for the page: BrowseAvailabilityBudgetBurn severity=page
+curl -s localhost:9090/api/v1/alerts | python3 -c "import json,sys;[print(a['labels']['alertname'],a['labels']['severity']) for a in json.load(sys.stdin)['data']['alerts'] if a['state']=='firing']"
+# 1. RED: which service/operation errors?
+curl -s -G localhost:9090/api/v1/query --data-urlencode 'query=topk(4, sum by (service_name,span_name) (rate(traces_span_metrics_calls_total{span_kind="SPAN_KIND_SERVER",status_code="STATUS_CODE_ERROR"}[5m])))'
+# 2. Tempo: an error trace      Grafana → Explore → Tempo → {resource.service.name="product-catalog" && status=error}
+# 3. Loki: logs for that trace  Grafana → trace → "Logs for this span"  (or {service_name=~".+"} | trace_id="<id>")
+scripts/flag.sh reset
+```
+
+| Step | Result (17:32–17:35 UTC) |
+|---|---|
+| Detection | Page fired **151 s** after injection. (The 1h window still held errors from an earlier sleep-interrupted run, so a clean partial failure takes ~11 min; P3-ISSUE-5) |
+| RED | `product-catalog GetProduct` 0.19 err/s; **`frontend GET /api/recommendations` 0.37 err/s** (P2-ISSUE-21) |
+| Trace | Error span `product-catalog: GetProduct`, message **`Error: Product Catalog Fail Feature Flag Enabled`** (root cause readable in the trace) |
+| Logs | By `trace_id`: `frontend error: API request failed`, and recommendation's product list including `OLJCESPC7Z` |
+| Alert → root cause | Scripted lookups ~1 s; the Grafana click path ~1 min. **Under 2 min ✓** |
+
 ## Phase 2 exit checklist
 
 - [x] kube-prometheus-stack, Tempo and Loki on persistent storage, versions pinned
@@ -215,9 +263,9 @@ Recommended: **B**. It matches the measured need (see [environments-and-sizing](
 - [x] Metrics ↔ traces ↔ logs links configured (exemplars, tracesToLogs, derived fields, service map)
 - [x] RED, pipeline-health and SLO dashboards as code; USE dashboards from kps
 - [x] The monitoring is monitored (independent pull path)
-- [x] P2-ISSUE-14/15 host memory + container limit thrashing: fixed with before/after data
-- [ ] P2-ISSUE-10 OTLP 400s
-- [ ] The alert → dashboard → trace → log drill in under 2 minutes (after P2-ISSUE-14)
+- [x] P2-ISSUE-14/15 host memory + container limit thrashing fixed; P2-ISSUE-19 host sleep identified (`make awake`)
+- [x] P2-ISSUE-10 OTLP 400s: two writers per series; fixed by promoting `host.name`
+- [x] Alert → dashboard → trace → log drill in under 2 minutes (and it found an SLI coverage gap)
 
 ## Re-run Phase 2 from scratch
 

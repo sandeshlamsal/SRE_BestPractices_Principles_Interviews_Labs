@@ -12,7 +12,7 @@ LOKI_VERSION  := 18.13.5
 
 # Observability stack (Phase 2)
 .PHONY: obs-secrets obs-up obs-down grafana-password
-.PHONY: help cluster-up cluster-down deploy undeploy status open slo-rules prom dashboards monitors
+.PHONY: help cluster-up cluster-down deploy undeploy status open slo-rules prom dashboards monitors alerting check-runbooks awake
 
 help: ## Show targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -39,6 +39,13 @@ slo-rules: ## Generate + validate SLO rules from slos/ (Sloth + promtool) and ap
 monitors: ## Apply ServiceMonitors/PodMonitors/extra rules in observability/monitors/
 	kubectl apply -f observability/monitors/
 
+alerting: ## Apply Alertmanager routing (needs Secret observability/alerting-secrets; see Phase 3 guide)
+	@kubectl -n $(OBS_NS) get secret alerting-secrets >/dev/null 2>&1 || { echo "Missing Secret $(OBS_NS)/alerting-secrets (PagerDuty key + Slack webhooks). See docs/labs/phase-3-alerting.md"; exit 1; }
+	kubectl apply -f observability/alerting/alertmanagerconfig.yaml
+
+check-runbooks: ## Verify every alert rule in the repo has a runbook that exists in runbooks/
+	scripts/check-runbooks.sh
+
 dashboards: ## Load Grafana dashboards from observability/dashboards/ (sidecar picks up label grafana_dashboard=1)
 	kubectl create configmap sre-lab-dashboards -n $(OBS_NS) \
 	  --from-file=observability/dashboards/ --dry-run=client -o yaml \
@@ -50,6 +57,11 @@ undeploy: ## Remove the Astronomy Shop
 
 status: ## Show pod status
 	kubectl get pods -n $(NAMESPACE) -o wide
+
+awake: ## Keep the Mac from idle-sleeping while the lab runs (Ctrl-C to stop). Sleep FREEZES the Docker VM (P3-ISSUE-2)
+	@pmset -g batt | head -1
+	@echo "caffeinate running: display may sleep, system will not idle-sleep. Ctrl-C to stop."
+	caffeinate -i -m -s
 
 open: ## Port-forward the shop (UI, /grafana, /jaeger/ui, /feature, /loadgen)
 	@echo "Shop:     http://localhost:8080"

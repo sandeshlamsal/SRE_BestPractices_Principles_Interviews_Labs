@@ -191,7 +191,7 @@ groups:
       severity: page
       sloth_severity: page
     annotations:
-      runbook: docs/incident-response-plan.md#5-runbook-index
+      runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/cart-availability.md
       summary: Add-to-cart availability error budget is burning too fast.
       title: (page) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget
         burn rate is too fast.
@@ -213,7 +213,7 @@ groups:
       severity: ticket
       sloth_severity: ticket
     annotations:
-      runbook: docs/incident-response-plan.md#5-runbook-index
+      runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/cart-availability.md
       summary: Add-to-cart availability error budget is burning too fast.
       title: (ticket) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget
         burn rate is too fast.

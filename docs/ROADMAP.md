@@ -36,15 +36,16 @@ The local-vs-cloud comparison and principle coverage for every phase are in [lab
 - [x] Link from metrics to traces (exemplars) and from traces to logs
 - [x] Monitor the telemetry pipeline itself (collector pull metrics + pipeline-health dashboard)
 - [x] Resolve host memory pressure + container limit thrashing (P2-ISSUE-14/15)
-- [ ] OTLP 400s (P2-ISSUE-10)
-- [ ] Alert → dashboard → trace → log drill in under 2 minutes
+- [x] OTLP 400s (P2-ISSUE-10)
+- [x] Alert → dashboard → trace → log drill in under 2 minutes
 
-📘 **Execution guide:** [labs/phase-2-observability.md](labs/phase-2-observability.md) (in progress, 2026-09-25)
+📘 **Execution guide:** [labs/phase-2-observability.md](labs/phase-2-observability.md) (done 2026-09-25)
 
 **Exit:** go from an alert → dashboard → trace → log line in under 2 minutes.
 **Interview:** RED vs USE, the four golden signals, cardinality problems.
 
 ## Phase 3: Alerting & on-call
+📘 **Execution guide:** [labs/phase-3-alerting.md](labs/phase-3-alerting.md) (in progress)
 - [ ] Multi-window, multi-burn-rate SLO alerts (from Phase 1)
 - [ ] Alertmanager routing: page vs ticket, grouping, inhibition, silences
 - [ ] A runbook for every paging alert in `runbooks/`

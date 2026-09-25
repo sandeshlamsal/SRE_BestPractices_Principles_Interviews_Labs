@@ -1,0 +1,67 @@
+# SRE Lab platform alerts (Phase 3). SLO burn-rate alerts are generated separately from slos/ (Sloth).
+# Every alert MUST have: severity (page|ticket), a summary, and a runbook URL to a file in runbooks/.
+# Policy: page only on user-facing symptoms or on losing the ability to see them; causes -> ticket.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: sre-lab-alerts
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  groups:
+    - name: sre-lab.observability-health
+      rules:
+        # P1-ISSUE-16 / P2-ISSUE-15: when telemetry stops, SLIs go blank (not red) and burn-rate
+        # alerts CANNOT fire. Losing sight of a critical journey is itself page-worthy.
+        - alert: SLIDataMissing
+          expr: (count(slo:sli_error:ratio_rate5m) or vector(0)) < 5
+          for: 10m
+          labels:
+            severity: page
+          annotations:
+            summary: "SLO data missing: {{ $value }} of 5 SLIs are reporting. Burn-rate alerts are blind."
+            runbook: "https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/sli-data-missing.md"
+
+        - alert: TelemetryPipelineStale
+          expr: time() - max(timestamp(traces_span_metrics_calls_total)) > 300
+          for: 5m
+          labels:
+            severity: page
+          annotations:
+            summary: "No span-derived metrics for {{ $value | humanizeDuration }}. SLIs are going blind."
+            runbook: "https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/telemetry-pipeline-stale.md"
+
+        # Uses the collector's PULL-scraped self-metrics (independent of its own pipeline; P2-ISSUE-5).
+        - alert: OtelCollectorDown
+          expr: up{job="observability/otel-collector"} == 0
+          for: 5m
+          labels:
+            severity: ticket
+          annotations:
+            summary: "OTel collector {{ $labels.pod }} is not scrapeable."
+            runbook: "https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/telemetry-pipeline-stale.md"
+
+        - alert: OtelCollectorExportFailing
+          expr: sum by (pod, exporter) (rate(otelcol_exporter_send_failed_metric_points{job="observability/otel-collector"}[5m])) > 0
+          for: 10m
+          labels:
+            severity: ticket
+          annotations:
+            summary: "Collector {{ $labels.pod }} is dropping metric points to {{ $labels.exporter }} ({{ $value | humanize }}/s)."
+            runbook: "https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/collector-export-failing.md"
+
+    - name: sre-lab.capacity
+      rules:
+        # P2-ISSUE-15: a too-tight memory limit usually does NOT OOM-kill. The kernel keeps reclaiming
+        # (even the program's own code), the service gets slow, and node I/O suffers. No restart, no
+        # OOM alert. container_memory_failcnt = memory.events "max" (limit hits) on cgroup v2.
+        # Major page faults alone are NOT a good signal (load-generator: 31/s while far below its limit).
+        - alert: ContainerMemoryLimitThrashing
+          expr: sum by (namespace, pod, container) (rate(container_memory_failcnt{container!=""}[5m])) > 10
+          for: 10m
+          labels:
+            severity: ticket
+          annotations:
+            summary: "{{ $labels.namespace }}/{{ $labels.container }} is hitting its memory limit {{ $value | humanize }}x/s (expect latency, not OOM)."
+            runbook: "https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/container-memory-thrashing.md"

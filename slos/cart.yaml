@@ -23,7 +23,7 @@ slos:
         category: availability
       annotations:
         summary: "Add-to-cart availability error budget is burning too fast."
-        runbook: "docs/incident-response-plan.md#5-runbook-index"
+        runbook: "https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/cart-availability.md"
       page_alert:
         labels:
           severity: page

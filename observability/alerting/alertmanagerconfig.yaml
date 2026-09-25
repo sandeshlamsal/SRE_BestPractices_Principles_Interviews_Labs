@@ -1,0 +1,109 @@
+# Alertmanager routing for the SRE Lab (Phase 3). Used as Alertmanager's GLOBAL config via
+# kube-prometheus-stack: alertmanager.alertmanagerSpec.alertmanagerConfiguration.name = sre-lab.
+# Decision record: docs/adr/0003-paging-and-incident-tooling.md
+#
+# Credentials are NEVER in Git. They come from Secret observability/alerting-secrets:
+#   pagerduty-routing-key, slack-pages-webhook, slack-alerts-webhook   (create: see docs/labs/phase-3-alerting.md)
+#
+# Policy (docs/principles/03-monitoring-alerting.md):
+#   severity=page   -> PagerDuty (wakes a human) + Slack #pages (visibility)
+#   severity=ticket -> Slack #alerts (work hours)
+#   kube-prometheus-stack defaults (critical/warning) -> Slack #alerts: they are CAUSES, not user symptoms
+#   Watchdog -> heartbeat (null locally; a dead-man's switch in production), info/none -> dropped
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: sre-lab
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  route:
+    receiver: slack-alerts
+    groupBy: [alertname, sloth_service, namespace]
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    routes:
+      - receiver: "null"
+        matchers:
+          - { name: alertname, value: Watchdog, matchType: "=" }
+      - receiver: "null"
+        matchers:
+          - { name: alertname, value: InfoInhibitor, matchType: "=" }
+      - receiver: pagerduty
+        continue: true                     # also post pages to Slack #pages
+        groupWait: 10s
+        repeatInterval: 1h
+        matchers:
+          - { name: severity, value: page, matchType: "=" }
+      - receiver: slack-pages
+        groupWait: 10s
+        repeatInterval: 1h
+        matchers:
+          - { name: severity, value: page, matchType: "=" }
+      - receiver: slack-alerts
+        repeatInterval: 12h
+        matchers:
+          - { name: severity, value: "ticket|critical|warning", matchType: "=~" }
+      - receiver: "null"
+        matchers:
+          - { name: severity, value: "info|none", matchType: "=~" }
+
+  inhibitRules:
+    # If the telemetry pipeline itself is stale, SLI-based alerts are untrustworthy: show the cause only.
+    - sourceMatch:
+        - { name: alertname, value: TelemetryPipelineStale, matchType: "=" }
+      targetMatch:
+        - { name: alertname, value: "SLIDataMissing|.*BudgetBurn", matchType: "=~" }
+    # A page for an SLO makes the same SLO's ticket redundant.
+    - sourceMatch:
+        - { name: severity, value: page, matchType: "=" }
+      targetMatch:
+        - { name: severity, value: ticket, matchType: "=" }
+      equal: [alertname, sloth_id]
+    # kube-prometheus-stack default: critical suppresses warning for the same alert/namespace.
+    - sourceMatch:
+        - { name: severity, value: critical, matchType: "=" }
+      targetMatch:
+        - { name: severity, value: warning, matchType: "=" }
+      equal: [alertname, namespace]
+
+  receivers:
+    - name: "null"
+    - name: pagerduty
+      pagerdutyConfigs:
+        - routingKey:
+            name: alerting-secrets
+            key: pagerduty-routing-key
+          sendResolved: true
+          severity: critical
+          description: '{{ .CommonLabels.alertname }}: {{ .CommonAnnotations.summary }}'
+          details:
+            - { key: runbook, value: '{{ .CommonAnnotations.runbook }}' }
+            - { key: slo, value: '{{ .CommonLabels.sloth_id }}' }
+            - { key: firing, value: '{{ .Alerts.Firing | len }}' }
+    - name: slack-pages
+      slackConfigs:
+        - apiURL:
+            name: alerting-secrets
+            key: slack-pages-webhook
+          sendResolved: true
+          title: '{{ if eq .Status "firing" }}:rotating_light: PAGE{{ else }}:white_check_mark: RESOLVED{{ end }}: {{ .CommonLabels.alertname }}'
+          text: |-
+            {{ range .Alerts }}*{{ .Annotations.summary }}*
+            SLO: `{{ .Labels.sloth_id }}` | severity: `{{ .Labels.severity }}` | since {{ .StartsAt.Format "15:04:05 UTC" }}
+            Runbook: {{ .Annotations.runbook }}
+            {{ end }}
+    - name: slack-alerts
+      slackConfigs:
+        - apiURL:
+            name: alerting-secrets
+            key: slack-alerts-webhook
+          sendResolved: true
+          title: '{{ if eq .Status "firing" }}:warning: {{ .CommonLabels.severity | toUpper }}{{ else }}:white_check_mark: RESOLVED{{ end }}: {{ .CommonLabels.alertname }}'
+          text: |-
+            {{ range .Alerts }}*{{ if .Annotations.summary }}{{ .Annotations.summary }}{{ else }}{{ .Annotations.description }}{{ end }}*
+            {{ if .Labels.namespace }}ns: `{{ .Labels.namespace }}` | {{ end }}severity: `{{ .Labels.severity }}`
+            Runbook: {{ if .Annotations.runbook }}{{ .Annotations.runbook }}{{ else }}{{ .Annotations.runbook_url }}{{ end }}
+            {{ end }}

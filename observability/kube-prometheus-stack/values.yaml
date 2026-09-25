@@ -9,6 +9,13 @@ kubeScheduler: { enabled: false }
 kubeEtcd: { enabled: false }
 kubeProxy: { enabled: false }
 
+defaultRules:
+  disabled:
+    # kind nodes have no NTP; these fire constantly and are not actionable locally (P3-ISSUE-1).
+    # Re-enable on EKS, where clock skew is real and matters (TLS, tokens, log ordering).
+    NodeClockNotSynchronising: true
+    NodeClockSkewDetected: true
+
 prometheus:
   prometheusSpec:
     retention: 7d
@@ -27,6 +34,10 @@ prometheus:
         - k8s.pod.name
         - k8s.deployment.name
         - k8s.node.name
+        # P2-ISSUE-10: host metrics / kafkametrics carry only host.name. Without it, both DaemonSet
+        # collectors wrote the SAME series (values interleaved -> corrupted counters, and stale
+        # batches rejected with HTTP 400 once a writer fell behind).
+        - host.name
     # Tempo's metrics-generator remote-writes service-graph metrics
     enableRemoteWriteReceiver: true
     enableFeatures:

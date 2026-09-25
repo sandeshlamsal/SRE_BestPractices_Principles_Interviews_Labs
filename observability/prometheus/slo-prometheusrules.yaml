@@ -12,11 +12,12 @@ spec:
   - name: sloth-slo-sli-recordings-browse-availability
     rules:
     - record: slo:sli_error:ratio_rate5m
-      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*", http_response_status_code=~"5.."}[5m])) or vector(0)))
+      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations", http_response_status_code=~"5.."}[5m]))
+        or vector(0)))
 
         /
 
-        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*",http_response_status_code!=""}[5m])))
+        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations",http_response_status_code!=""}[5m])))
 
         '
       labels:
@@ -27,11 +28,12 @@ spec:
         sloth_slo: availability
         sloth_window: 5m
     - record: slo:sli_error:ratio_rate30m
-      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*", http_response_status_code=~"5.."}[30m])) or vector(0)))
+      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations", http_response_status_code=~"5.."}[30m]))
+        or vector(0)))
 
         /
 
-        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*",http_response_status_code!=""}[30m])))
+        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations",http_response_status_code!=""}[30m])))
 
         '
       labels:
@@ -42,11 +44,12 @@ spec:
         sloth_slo: availability
         sloth_window: 30m
     - record: slo:sli_error:ratio_rate1h
-      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*", http_response_status_code=~"5.."}[1h])) or vector(0)))
+      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations", http_response_status_code=~"5.."}[1h]))
+        or vector(0)))
 
         /
 
-        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*",http_response_status_code!=""}[1h])))
+        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations",http_response_status_code!=""}[1h])))
 
         '
       labels:
@@ -57,11 +60,12 @@ spec:
         sloth_slo: availability
         sloth_window: 1h
     - record: slo:sli_error:ratio_rate2h
-      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*", http_response_status_code=~"5.."}[2h])) or vector(0)))
+      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations", http_response_status_code=~"5.."}[2h]))
+        or vector(0)))
 
         /
 
-        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*",http_response_status_code!=""}[2h])))
+        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations",http_response_status_code!=""}[2h])))
 
         '
       labels:
@@ -72,11 +76,12 @@ spec:
         sloth_slo: availability
         sloth_window: 2h
     - record: slo:sli_error:ratio_rate6h
-      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*", http_response_status_code=~"5.."}[6h])) or vector(0)))
+      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations", http_response_status_code=~"5.."}[6h]))
+        or vector(0)))
 
         /
 
-        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*",http_response_status_code!=""}[6h])))
+        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations",http_response_status_code!=""}[6h])))
 
         '
       labels:
@@ -87,11 +92,12 @@ spec:
         sloth_slo: availability
         sloth_window: 6h
     - record: slo:sli_error:ratio_rate1d
-      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*", http_response_status_code=~"5.."}[1d])) or vector(0)))
+      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations", http_response_status_code=~"5.."}[1d]))
+        or vector(0)))
 
         /
 
-        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*",http_response_status_code!=""}[1d])))
+        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations",http_response_status_code!=""}[1d])))
 
         '
       labels:
@@ -102,11 +108,12 @@ spec:
         sloth_slo: availability
         sloth_window: 1d
     - record: slo:sli_error:ratio_rate3d
-      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*", http_response_status_code=~"5.."}[3d])) or vector(0)))
+      expr: '((sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations", http_response_status_code=~"5.."}[3d]))
+        or vector(0)))
 
         /
 
-        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*",http_response_status_code!=""}[3d])))
+        (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER", span_name=~"GET /api/products.*|GET /api/recommendations",http_response_status_code!=""}[3d])))
 
         '
       labels:
@@ -217,7 +224,7 @@ spec:
         severity: page
         sloth_severity: page
       annotations:
-        runbook: docs/incident-response-plan.md#5-runbook-index
+        runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/browse-availability.md
         summary: Browse availability error budget is burning too fast.
         title: (page) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget burn rate is too fast.
     - alert: BrowseAvailabilityBudgetBurn
@@ -230,16 +237,16 @@ spec:
         severity: ticket
         sloth_severity: ticket
       annotations:
-        runbook: docs/incident-response-plan.md#5-runbook-index
+        runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/browse-availability.md
         summary: Browse availability error budget is burning too fast.
         title: (ticket) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget burn rate is too fast.
   - name: sloth-slo-sli-recordings-browse-latency
     rules:
     - record: slo:sli_error:ratio_rate5m
-      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",http_response_status_code!=\"\"\
-        }[5m]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",le=\"400\",http_response_status_code!=\"\
-        \"}[5m]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*\",http_response_status_code!=\"\
-        \"}[5m])))\n"
+      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\",http_response_status_code!=\"\
+        \"}[5m]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\"\
+        ,le=\"400\",http_response_status_code!=\"\"}[5m]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*|GET\
+        \ /api/recommendations\",http_response_status_code!=\"\"}[5m])))\n"
       labels:
         cuj: browse
         owner: sre-lab
@@ -248,10 +255,10 @@ spec:
         sloth_slo: latency
         sloth_window: 5m
     - record: slo:sli_error:ratio_rate30m
-      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",http_response_status_code!=\"\"\
-        }[30m]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",le=\"400\",http_response_status_code!=\"\
-        \"}[30m]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*\",http_response_status_code!=\"\
-        \"}[30m])))\n"
+      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\",http_response_status_code!=\"\
+        \"}[30m]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\"\
+        ,le=\"400\",http_response_status_code!=\"\"}[30m]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*|GET\
+        \ /api/recommendations\",http_response_status_code!=\"\"}[30m])))\n"
       labels:
         cuj: browse
         owner: sre-lab
@@ -260,10 +267,10 @@ spec:
         sloth_slo: latency
         sloth_window: 30m
     - record: slo:sli_error:ratio_rate1h
-      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",http_response_status_code!=\"\"\
-        }[1h]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",le=\"400\",http_response_status_code!=\"\
-        \"}[1h]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*\",http_response_status_code!=\"\
-        \"}[1h])))\n"
+      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\",http_response_status_code!=\"\
+        \"}[1h]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\"\
+        ,le=\"400\",http_response_status_code!=\"\"}[1h]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*|GET\
+        \ /api/recommendations\",http_response_status_code!=\"\"}[1h])))\n"
       labels:
         cuj: browse
         owner: sre-lab
@@ -272,10 +279,10 @@ spec:
         sloth_slo: latency
         sloth_window: 1h
     - record: slo:sli_error:ratio_rate2h
-      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",http_response_status_code!=\"\"\
-        }[2h]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",le=\"400\",http_response_status_code!=\"\
-        \"}[2h]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*\",http_response_status_code!=\"\
-        \"}[2h])))\n"
+      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\",http_response_status_code!=\"\
+        \"}[2h]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\"\
+        ,le=\"400\",http_response_status_code!=\"\"}[2h]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*|GET\
+        \ /api/recommendations\",http_response_status_code!=\"\"}[2h])))\n"
       labels:
         cuj: browse
         owner: sre-lab
@@ -284,10 +291,10 @@ spec:
         sloth_slo: latency
         sloth_window: 2h
     - record: slo:sli_error:ratio_rate6h
-      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",http_response_status_code!=\"\"\
-        }[6h]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",le=\"400\",http_response_status_code!=\"\
-        \"}[6h]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*\",http_response_status_code!=\"\
-        \"}[6h])))\n"
+      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\",http_response_status_code!=\"\
+        \"}[6h]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\"\
+        ,le=\"400\",http_response_status_code!=\"\"}[6h]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*|GET\
+        \ /api/recommendations\",http_response_status_code!=\"\"}[6h])))\n"
       labels:
         cuj: browse
         owner: sre-lab
@@ -296,10 +303,10 @@ spec:
         sloth_slo: latency
         sloth_window: 6h
     - record: slo:sli_error:ratio_rate1d
-      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",http_response_status_code!=\"\"\
-        }[1d]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",le=\"400\",http_response_status_code!=\"\
-        \"}[1d]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*\",http_response_status_code!=\"\
-        \"}[1d])))\n"
+      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\",http_response_status_code!=\"\
+        \"}[1d]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\"\
+        ,le=\"400\",http_response_status_code!=\"\"}[1d]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*|GET\
+        \ /api/recommendations\",http_response_status_code!=\"\"}[1d])))\n"
       labels:
         cuj: browse
         owner: sre-lab
@@ -308,10 +315,10 @@ spec:
         sloth_slo: latency
         sloth_window: 1d
     - record: slo:sli_error:ratio_rate3d
-      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",http_response_status_code!=\"\"\
-        }[3d]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*\",le=\"400\",http_response_status_code!=\"\
-        \"}[3d]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*\",http_response_status_code!=\"\
-        \"}[3d])))\n"
+      expr: "((\n  sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\",http_response_status_code!=\"\
+        \"}[3d]))\n  -\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",\n  span_name=~\"GET /api/products.*|GET /api/recommendations\"\
+        ,le=\"400\",http_response_status_code!=\"\"}[3d]))\n))\n/\n(sum(rate(traces_span_metrics_duration_milliseconds_count{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\", span_name=~\"GET /api/products.*|GET\
+        \ /api/recommendations\",http_response_status_code!=\"\"}[3d])))\n"
       labels:
         cuj: browse
         owner: sre-lab
@@ -420,7 +427,7 @@ spec:
         severity: page
         sloth_severity: page
       annotations:
-        runbook: docs/incident-response-plan.md#5-runbook-index
+        runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/browse-latency.md
         summary: Browse latency error budget is burning too fast.
         title: (page) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget burn rate is too fast.
     - alert: BrowseLatencyBudgetBurn
@@ -433,7 +440,7 @@ spec:
         severity: ticket
         sloth_severity: ticket
       annotations:
-        runbook: docs/incident-response-plan.md#5-runbook-index
+        runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/browse-latency.md
         summary: Browse latency error budget is burning too fast.
         title: (ticket) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget burn rate is too fast.
 ---
@@ -655,7 +662,7 @@ spec:
         severity: page
         sloth_severity: page
       annotations:
-        runbook: docs/incident-response-plan.md#5-runbook-index
+        runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/cart-availability.md
         summary: Add-to-cart availability error budget is burning too fast.
         title: (page) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget burn rate is too fast.
     - alert: CartAvailabilityBudgetBurn
@@ -668,7 +675,7 @@ spec:
         severity: ticket
         sloth_severity: ticket
       annotations:
-        runbook: docs/incident-response-plan.md#5-runbook-index
+        runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/cart-availability.md
         summary: Add-to-cart availability error budget is burning too fast.
         title: (ticket) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget burn rate is too fast.
 ---
@@ -890,7 +897,7 @@ spec:
         severity: page
         sloth_severity: page
       annotations:
-        runbook: docs/incident-response-plan.md#5-runbook-index
+        runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/checkout-availability.md
         summary: Checkout availability error budget is burning too fast.
         title: (page) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget burn rate is too fast.
     - alert: CheckoutAvailabilityBudgetBurn
@@ -903,7 +910,7 @@ spec:
         severity: ticket
         sloth_severity: ticket
       annotations:
-        runbook: docs/incident-response-plan.md#5-runbook-index
+        runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/checkout-availability.md
         summary: Checkout availability error budget is burning too fast.
         title: (ticket) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget burn rate is too fast.
   - name: sloth-slo-sli-recordings-checkout-latency
@@ -1093,7 +1100,7 @@ spec:
         severity: page
         sloth_severity: page
       annotations:
-        runbook: docs/incident-response-plan.md#5-runbook-index
+        runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/checkout-latency.md
         summary: Checkout latency error budget is burning too fast.
         title: (page) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget burn rate is too fast.
     - alert: CheckoutLatencyBudgetBurn
@@ -1106,6 +1113,6 @@ spec:
         severity: ticket
         sloth_severity: ticket
       annotations:
-        runbook: docs/incident-response-plan.md#5-runbook-index
+        runbook: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/checkout-latency.md
         summary: Checkout latency error budget is burning too fast.
         title: (ticket) {{$labels.sloth_service}} {{$labels.sloth_slo}} SLO error budget burn rate is too fast.

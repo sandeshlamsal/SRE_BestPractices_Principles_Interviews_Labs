@@ -28,7 +28,7 @@ slos:
         category: availability
       annotations:
         summary: "Checkout availability error budget is burning too fast."
-        runbook: "docs/incident-response-plan.md#5-runbook-index"
+        runbook: "https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/checkout-availability.md"
       page_alert:
         labels:
           severity: page
@@ -58,7 +58,7 @@ slos:
         category: latency
       annotations:
         summary: "Checkout latency error budget is burning too fast."
-        runbook: "docs/incident-response-plan.md#5-runbook-index"
+        runbook: "https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/checkout-latency.md"
       page_alert:
         labels:
           severity: page
