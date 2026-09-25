@@ -3,6 +3,7 @@
 Each phase ends with **exit criteria** and **interview takeaways**, so the lab work
 also prepares you for interviews. Aim for about one phase per week.
 The concepts behind each phase are explained in [principles/](principles/README.md).
+The local-vs-cloud comparison and principle coverage for every phase are in [lab-matrix.md](lab-matrix.md).
 
 ---
 
@@ -75,9 +76,22 @@ Write a postmortem in `postmortems/` for each one.
 
 **Interview:** deployment strategies, and how error budgets gate releases.
 
-## Phase 8: Infrastructure as Code & cloud (optional)
-- [ ] Terraform an EKS or GKE cluster and repeat Phases 1–7 there
-- [ ] Measure cost against reliability trade-offs
+## Phase 8: Infrastructure as Code & cloud
+- [ ] Terraform an EKS or GKE cluster (3 nodes across 3 AZs); run `terraform destroy` after each session
+- [ ] Deploy the **same repo** there: the SLOs, alerts, dashboards, and runbooks move over unchanged
+- [ ] Run the cloud-only scenarios: AZ outage, cluster-autoscaler lag, managed-dependency failover, large load test, IAM/quota failure
+- [ ] Measure cost against reliability trade-offs (what would one more nine cost?)
+
+See [lab-matrix.md](lab-matrix.md) for what each phase covers locally vs in the cloud.
+
+## Phase 9: Disaster recovery & production readiness (capstone)
+- [ ] Define **RPO/RTO** for stateful parts (cart in Valkey, Kafka orders, any database)
+- [ ] Back up and **test a restore** with Velero (local: to MinIO; cloud: to S3/GCS). An untested backup doesn't count
+- [ ] DR drill: delete the whole namespace (local) or cluster (cloud) and rebuild from Git and backups, timing it against the RTO
+- [ ] Complete the [Production Readiness Review](principles/09-culture-oncall.md#production-readiness-review-checklist-use-it-on-the-astronomy-shop) checklist and write up the gaps
+
+**Exit:** the shop can be rebuilt from nothing within the RTO, and the PRR is green.
+**Interview:** RPO vs RTO, backup vs DR, "how would you recover from losing a region?"
 
 ## Ongoing: Interview prep (`interviews/`)
 - SRE fundamentals Q&A, Linux and networking troubleshooting, system design with a reliability focus
