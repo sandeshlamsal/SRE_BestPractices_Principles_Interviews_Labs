@@ -1,0 +1,39 @@
+# SLO for the ASYNC order pipeline: checkout --publish--> Kafka --consume--> accounting.
+# Phase 4 audit (GD1 action item 6, 2026-09-25): with Kafka down for 3 min, checkout returned 200 and its
+# "publish orders" PRODUCER span said OK (async send = queued, not delivered). 77 published vs 66 consumed
+# -> 11 orders never reached accounting/fraud-detection. Consumer LAG stayed 0 because the in-memory broker's
+# restart wiped the topic. Only end-to-end COMPLETENESS (published vs processed) catches this.
+# Objective 99.9%: first set to 99% (fear of in-flight-lag noise), but measured steady-state error was 0.0 and at 99%
+# a real loss of 13 orders only raised a TICKET (1h error 9.8% < 14.4% page threshold). Lost orders are permanent
+# and involve money -> must page. At 99.9% the page threshold is 1.44%. (P4-ISSUE-9)
+version: "prometheus/v1"
+service: "order-pipeline"
+labels:
+  owner: "sre-lab"
+  cuj: "order-processing"
+slos:
+  - name: "completeness"
+    objective: 99.9
+    description: "Every order published by checkout is processed by accounting (async, end to end)."
+    sli:
+      events:
+        error_query: >-
+          clamp_min(
+            sum(rate(traces_span_metrics_calls_total{service_name="checkout",span_kind="SPAN_KIND_PRODUCER",span_name="publish orders"}[{{.window}}]))
+            - (sum(rate(traces_span_metrics_calls_total{service_name="accounting",span_name="order-consumed"}[{{.window}}])) or vector(0))
+          , 0)
+        total_query: >-
+          sum(rate(traces_span_metrics_calls_total{service_name="checkout",span_kind="SPAN_KIND_PRODUCER",span_name="publish orders"}[{{.window}}]))
+    alerting:
+      name: OrderPipelineCompletenessBudgetBurn
+      labels:
+        category: completeness
+      annotations:
+        summary: "Published orders are not being processed by accounting (orders lost or stuck in the async pipeline)."
+        runbook: "https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs/blob/main/runbooks/order-pipeline-completeness.md"
+      page_alert:
+        labels:
+          severity: page
+      ticket_alert:
+        labels:
+          severity: ticket

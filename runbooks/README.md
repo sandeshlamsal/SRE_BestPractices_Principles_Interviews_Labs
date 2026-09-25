@@ -10,6 +10,7 @@ Every alert that can reach a human links here through its `runbook` annotation. 
 | BrowseLatencyBudgetBurn | page / ticket | [browse-latency.md](browse-latency.md) |
 | CartAvailabilityBudgetBurn | page / ticket | [cart-availability.md](cart-availability.md) |
 | CheckoutOrderIntegrityBudgetBurn | page / ticket | [checkout-order-integrity.md](checkout-order-integrity.md) |
+| OrderPipelineCompletenessBudgetBurn | page / ticket | [order-pipeline-completeness.md](order-pipeline-completeness.md) |
 | SLIDataMissing | page | [sli-data-missing.md](sli-data-missing.md) |
 | TelemetryPipelineStale, OtelCollectorDown | page, ticket | [telemetry-pipeline-stale.md](telemetry-pipeline-stale.md) |
 | OtelCollectorExportFailing | ticket | [collector-export-failing.md](collector-export-failing.md) |

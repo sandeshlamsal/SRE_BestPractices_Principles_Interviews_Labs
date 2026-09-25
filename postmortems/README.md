@@ -10,6 +10,6 @@ MTTD = until the first alert or human notice; MTTA = alert → acknowledged; MTT
 
 | Date | Postmortem | Type | Sev | MTTD | MTTA | MTTM | Budget used | Action items open |
 |---|---|---|---|---|---|---|---|---|
-| 2026-09-25 | [GD1: orders charged, cart not cleared](2026-09-25-gd1-cart-not-cleared.md) | game day (not blind) | SEV2 | 10m21s (human; **monitoring: never**) | n/a | 10m52s | none (no SLO covered it) | 3 of 6 |
+| 2026-09-25 | [GD1: orders charged, cart not cleared](2026-09-25-gd1-cart-not-cleared.md) | game day (not blind) | SEV2 | 10m21s (human; **monitoring: never**) | n/a | 10m52s | none (no SLO covered it) | 2 of 6 (AI-4 deferred, AI-5 app team) |
 
 Targets ([incident-response-plan §7](../docs/incident-response-plan.md#7-measuring-how-well-we-respond)): **MTTD < 5 min**, **MTTM < 15 min**, **0 action items older than 30 days**.

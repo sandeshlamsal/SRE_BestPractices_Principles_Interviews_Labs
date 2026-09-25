@@ -57,8 +57,8 @@ None from monitoring. The game-day team investigated because an *expected* page 
 | 1 | Add a correctness SLO `checkout-order-integrity` (EmptyCart success, 99.9%) + runbook | Detect | SRE | 2026-09-25 | ✅ done: pages via PagerDuty + Slack routes |
 | 2 | Make `SLIDataMissing` self-maintaining (`count(objectives) − count(SLIs) > 0`) | Detect | SRE | 2026-09-25 | ✅ done |
 | 3 | Fix the game-day catalog: `cart-failure` → "orders charged, cart not cleared", expected `checkout-order-integrity` | Process | SRE | 2026-09-25 | ✅ done |
-| 4 | Re-run `cart-failure` **after the SLO windows clear** (≥ 1 h) to measure a clean time to detect | Detect | SRE | next session | ⏳ open |
+| 4 | Re-run `cart-failure` **after the SLO windows clear** to measure a clean time to detect | Detect | SRE | after 03:15 UTC | ⏳ deferred: the 6h page window holds GD1's errors (P4-ISSUE-10) |
 | 5 | Ask the checkout owners: should `EmptyCart` failure be retried or compensated (clear the cart asynchronously) instead of ignored? | Prevent | app team | — | ⏳ open |
-| 6 | Look for other swallowed failures: which calls in `PlaceOrder` are best-effort? (email, Kafka publish) Each needs its own correctness signal | Detect | SRE | Phase 4 | ⏳ open |
+| 6 | Look for other swallowed failures in `PlaceOrder` (email, Kafka publish) | Detect | SRE | Phase 4 | ✅ done: email loss invisible (P4-ISSUE-7, SLI open); **Kafka lost ~13 orders** with OK producer spans and lag 0 → new **order-pipeline-completeness** SLO (pages) (P4-ISSUE-8) |
 
 *This postmortem is blameless. The system allowed a failure to be swallowed and our SLOs didn't look for it. Both are design gaps, not mistakes by any person.*

@@ -34,6 +34,7 @@ We chose them from a measured baseline and marked them **provisional**, because 
 | **Classify by HTTP status (5xx + 422)**, not span status | **A 50% checkout outage was invisible**: failed orders return 422, and OTel only marks 5xx server spans as errors | **P1-ISSUE-11** |
 | Include `/api/recommendations` in browse | A drill showed it was the **largest** error source, with no SLO covering it | P2-ISSUE-21 |
 
+| Add an end-to-end **completeness** SLO for the async order pipeline | Kafka down 3 min: ~13 orders never processed, while the producer span said OK, consumer lag was 0, and all pods were healthy | P4-ISSUE-8 |
 | Add a **correctness** SLO (`checkout-order-integrity`) | Game Day 1: 46% of orders were **charged with the cart not cleared**; checkout returned 200, so every SLI stayed at 100% | P4-ISSUE-1 |
 
 **Lesson, the most important one in the lab:** *an SLI you haven't tested with an injected failure is a hypothesis, not a measurement.*
