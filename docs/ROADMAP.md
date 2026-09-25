@@ -36,7 +36,7 @@ The local-vs-cloud comparison and principle coverage for every phase are in [lab
 - [x] Link from metrics to traces (exemplars) and from traces to logs
 - [x] Monitor the telemetry pipeline itself (collector pull metrics + pipeline-health dashboard)
 - [x] Resolve host memory pressure + container limit thrashing (P2-ISSUE-14/15)
-- [x] OTLP 400s (P2-ISSUE-10)
+- [~] OTLP 400s (P2-ISSUE-10): main cause fixed, residual ~1.5% open
 - [x] Alert → dashboard → trace → log drill in under 2 minutes
 
 📘 **Execution guide:** [labs/phase-2-observability.md](labs/phase-2-observability.md) (done 2026-09-25)
