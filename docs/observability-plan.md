@@ -21,8 +21,8 @@ flowchart LR
   bb[blackbox exporter<br/>synthetic probes] --> prom
   sloth[Sloth<br/>SLO specs in Git] -- generates rules --> prom
   prom --> am[Alertmanager]
-  am -- severity=page --> pager[Slack/Discord #pages<br/>or PagerDuty free]
-  am -- severity=ticket --> ticket[GitHub issue / #alerts]
+  am -- severity=page --> pager[PagerDuty free<br/>→ Slack #pages]
+  am -- severity=ticket --> ticket[Slack #alerts]
   prom & tempo & loki --> graf[Grafana]
 ```
 
@@ -143,8 +143,8 @@ inhibit_rules:
 
 | Receiver | Local lab | Real-world equivalent |
 |---|---|---|
-| `pager` | Slack/Discord webhook to `#pages` (with phone notifications on), or the PagerDuty free plan | PagerDuty / Opsgenie / incident.io |
-| `ticket` | Slack `#alerts`, or a webhook that opens a GitHub issue | Jira / Linear |
+| `pager` | PagerDuty free plan (Events API v2), mirrored to Slack `#pages` ([ADR-0003](adr/0003-paging-and-incident-tooling.md)) | PagerDuty / incident.io |
+| `ticket` | Slack `#alerts` (incoming webhook) | Jira / Linear |
 
 **Rule:** no alert is merged without a `runbook` annotation that points to a file that exists.
 

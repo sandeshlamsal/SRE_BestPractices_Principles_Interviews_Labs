@@ -8,9 +8,9 @@ are in [principles/04](principles/04-incident-management.md) and [principles/05]
 | Item | Lab setup | Real-world equivalent |
 |---|---|---|
 | Rotation | You are primary. If you practice with friends, rotate weekly, with the others as secondary and as game master | A weekly primary + secondary rotation of 6–8 engineers |
-| Paging | Alertmanager → `#pages` (Slack/Discord, with phone notifications on) | PagerDuty / Opsgenie |
+| Paging | Alertmanager → **PagerDuty free** (phone push, acknowledge, escalation) → mirrored to Slack `#pages` ([ADR-0003](adr/0003-paging-and-incident-tooling.md)) | PagerDuty / incident.io |
 | Acknowledge within | **5 min** (page) | 5 min |
-| Escalation | Not acknowledged in 10 min → secondary; SEV1 not mitigated in 30 min → "engineering manager" (the game master) | Automated escalation policy |
+| Escalation | PagerDuty escalation policy: not acknowledged in 10 min → secondary; SEV1 not mitigated in 30 min → "engineering manager" (the game master) | Automated escalation policy |
 | Handoff | Notes in `oncall/handoff-log.md` at the end of each session | Handoff at shift change |
 
 ## 2. Severity matrix (tied to SLOs)

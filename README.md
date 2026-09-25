@@ -11,7 +11,7 @@ built-in failure injection via feature flags. The reasons for this choice are in
 
 ## Quick start
 
-Prerequisites: Docker (give it **12 GB RAM, 6 CPUs**; see [sizing](docs/environments-and-sizing.md)), kind, kubectl, helm.
+Prerequisites: Docker (give it **14–16 GB RAM, 6–8 CPUs**; see [sizing](docs/environments-and-sizing.md)), kind, kubectl, helm.
 
 ```bash
 make cluster-up   # 3-node kind cluster
@@ -24,6 +24,7 @@ make open         # http://localhost:8080
 
 | Path | Purpose |
 |---|---|
+| [docs/tool-stack.md](docs/tool-stack.md) | Production-grade tool stack: local vs AWS EKS vs Azure AKS, enforced standards, known gaps |
 | [docs/architecture.md](docs/architecture.md) | What the app looks like: user flows, service map, platform layers |
 | [docs/environments-and-sizing.md](docs/environments-and-sizing.md) | Local vs cloud, what each can test, resource sizing, cost |
 | [docs/observability-plan.md](docs/observability-plan.md) | Stack, SLI catalogue, SLOs as code, error budget tracking, alert routing |

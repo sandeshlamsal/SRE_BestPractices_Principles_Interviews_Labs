@@ -40,7 +40,7 @@ SRE and DORA agree: **speed and stability go together** when changes are small a
 - [ ] **Argo CD** watches this repo and syncs `apps/` to the cluster. No more `helm upgrade` by hand.
 - [ ] **Argo Rollouts** canary for the `checkout` service: 10% → 30% → 100%, with an `AnalysisTemplate` that queries the checkout SLI and burn rate from Prometheus
 - [ ] Break a release on purpose (bad image or an injected failure) and watch the automatic rollback
-- [ ] **GitHub Actions**: `helm lint`, `kubeconform`, `promtool check rules`, and a policy check (Kyverno/Conftest: resource limits and probes required)
+- [ ] **GitHub Actions**: `helm lint`, `kubeconform`, `promtool check rules`, and a policy check (Kyverno CLI: resource limits and probes required), Trivy, and Checkov for Terraform
 - [ ] Grafana annotations for every sync and flag change
 - [ ] Treat **flagd flag changes as changes**: keep them in Git and review them. Game-day postmortems will show why.
 

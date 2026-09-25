@@ -19,14 +19,14 @@ The local-vs-cloud comparison and principle coverage for every phase are in [lab
 ## Phase 1: SLIs & SLOs
 - [ ] Pick 3 critical user journeys: **browse catalog**, **add to cart**, **checkout**
 - [ ] Define availability and latency SLIs at the edge (frontend-proxy / Envoy metrics)
-- [ ] Write SLO docs in `slos/` using the template, then generate the rules with [Sloth](https://sloth.dev) or [Pyrra](https://github.com/pyrra-dev/pyrra)
+- [ ] Write SLO docs in `slos/` using the template, then generate the rules with [Sloth](https://sloth.dev)
 - [ ] Error-budget dashboard in Grafana
 
 **Exit:** each journey shows its SLI, target, and remaining budget.
 **Interview:** SLI vs SLO vs SLA; why not 100%; how to choose a target.
 
 ## Phase 2: Observability platform
-- [ ] Replace the bundled stack with **kube-prometheus-stack** (Prometheus, Alertmanager, Grafana), plus **Loki** for logs and **Tempo** or Jaeger for traces
+- [ ] Replace the bundled stack with **kube-prometheus-stack** (Prometheus, Alertmanager, Grafana), plus **Loki** for logs and **Tempo** for traces
 - [ ] RED dashboards per service, a USE dashboard for nodes, and a golden-signals overview
 - [ ] Link from metrics to traces (exemplars) and from traces to logs
 
@@ -37,7 +37,7 @@ The local-vs-cloud comparison and principle coverage for every phase are in [lab
 - [ ] Multi-window, multi-burn-rate SLO alerts (from Phase 1)
 - [ ] Alertmanager routing: page vs ticket, grouping, inhibition, silences
 - [ ] A runbook for every paging alert in `runbooks/`
-- [ ] Optional: route pages to a free PagerDuty or Grafana OnCall tier
+- [ ] Route pages to **PagerDuty** (free plan) with an escalation policy, mirrored to Slack `#pages`; tickets to Slack `#alerts`
 
 **Exit:** every page is symptom-based, actionable, and links to a runbook.
 **Interview:** alert fatigue, and why to alert on burn rate rather than thresholds.
@@ -56,7 +56,7 @@ Write a postmortem in `postmortems/` for each one.
 **Interview:** "Tell me about an incident you handled." You'll have real ones to talk about.
 
 ## Phase 5: Chaos engineering & resilience
-- [ ] Install **Chaos Mesh** or **LitmusChaos**
+- [ ] Install **Chaos Mesh**
 - [ ] Experiments with a hypothesis: pod kill, node drain, network latency and packet loss, DNS failure
 - [ ] Add PodDisruptionBudgets, readiness and liveness probes, resource requests and limits, HPA, and retries with timeouts where they're missing
 
@@ -64,7 +64,7 @@ Write a postmortem in `postmortems/` for each one.
 **Interview:** cascading failures, retries vs retry storms, circuit breakers, graceful degradation.
 
 ## Phase 6: Capacity & performance
-- [ ] Load test with **k6** or Locust; find the saturation point of the checkout path
+- [ ] Load test with **k6** (Locust keeps running as background traffic); find the saturation point of the checkout path
 - [ ] Tune HPAs from the results and write a capacity plan
 
 **Interview:** Little's Law, headroom, and forecasting.
@@ -77,9 +77,9 @@ Write a postmortem in `postmortems/` for each one.
 **Interview:** deployment strategies, and how error budgets gate releases.
 
 ## Phase 8: Infrastructure as Code & cloud
-- [ ] Terraform an EKS or GKE cluster (3 nodes across 3 AZs); run `terraform destroy` after each session
+- [ ] Terraform an **EKS** cluster (3 nodes across 3 AZs, Karpenter, Spot workers; see [ADR-0002](adr/0002-cloud-provider.md)); optionally one comparison session on AKS; run `terraform destroy` after each session
 - [ ] Deploy the **same repo** there: the SLOs, alerts, dashboards, and runbooks move over unchanged
-- [ ] Run the cloud-only scenarios: AZ outage, cluster-autoscaler lag, managed-dependency failover, large load test, IAM/quota failure
+- [ ] Run the cloud-only scenarios: AZ outage (AWS FIS), cluster-autoscaler lag, managed-dependency failover, large load test, IAM/quota failure
 - [ ] Measure cost against reliability trade-offs (what would one more nine cost?)
 
 See [lab-matrix.md](lab-matrix.md) for what each phase covers locally vs in the cloud.

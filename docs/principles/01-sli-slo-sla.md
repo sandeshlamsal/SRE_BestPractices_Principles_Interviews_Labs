@@ -129,7 +129,7 @@ sum(rate(traces_span_metrics_duration_milliseconds_count{
 ### Lab exercises (Phase 1)
 - [ ] Record a one-week baseline for each SLI above
 - [ ] Write one SLO doc per CUJ in `slos/` using [the template](../templates/slo.md)
-- [ ] Generate recording rules and alerts with Sloth or Pyrra
+- [ ] Generate recording rules and alerts with Sloth
 - [ ] Turn on the `paymentFailure` flag at 10% and watch the checkout SLI fall while browse stays flat
 
 ## Common mistakes

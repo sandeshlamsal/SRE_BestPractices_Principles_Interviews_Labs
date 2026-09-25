@@ -2,7 +2,7 @@
 
 ## Decision: local first, cloud later
 
-| | **Local (kind)**, Phases 0–7 | **Cloud (EKS or GKE)**, Phase 8 |
+| | **Local (kind)**, Phases 0–7 | **Cloud (AWS EKS; Azure AKS optional)**, Phases 8–9 |
 |---|---|---|
 | Cost | Free | Pay per hour, so tear it down after each session |
 | Speed to iterate | Fast rebuilds, no waiting on the cloud | Slower |
@@ -39,7 +39,7 @@ What local can't do is reproduce the **infrastructure failure modes** that only 
 Real teams don't test everything in production. They use a **pipeline of environments**, and so will we:
 
 1. **Local (kind): where you practice every day, ~80% of the learning.** Phases 0–7. Free, fast, and safe to break. You'll build the whole SRE operating model here: SLOs, alerts, runbooks, game days, chaos, canaries.
-2. **Cloud (EKS/GKE): short sessions that represent "production", ~20%.** Phase 8. Bring it up with Terraform, run the cloud-only scenarios above (kill an AZ, let the autoscaler react, fail over a managed database, run a large load test), write the postmortems, then `terraform destroy`. A few sessions cost about $10–20 in total.
+2. **Cloud (AWS EKS, see [ADR-0002](adr/0002-cloud-provider.md)): short sessions that represent "production", ~20%.** Phase 8. Bring it up with Terraform, run the cloud-only scenarios above (kill an AZ, let the autoscaler react, fail over a managed database, run a large load test), write the postmortems, then `terraform destroy`. A few sessions cost about $10–20 in total.
 3. **Same Git repo for both.** The SLOs, alerts, dashboards, and runbooks move from local to cloud unchanged. That portability is what proves you've built a real operating model rather than a laptop demo.
 
 For interviews, this gives you two kinds of stories: **"I defined SLOs and ran incidents"** (from local)
@@ -57,7 +57,7 @@ Settings → Resources:
 | Resource | Minimum (Phase 0–1) | **Recommended (all phases)** |
 |---|---|---|
 | CPUs | 4 | **6–8** |
-| Memory | 8 GB | **12–14 GB** |
+| Memory | 8 GB | **14–16 GB** (the full production-grade stack, see [tool-stack.md](tool-stack.md#4-resource-impact)) |
 | Swap | 1 GB | 2 GB |
 | Disk image | 40 GB | **80 GB** |
 
@@ -82,15 +82,19 @@ These numbers are estimates. Measure the real ones with `kubectl top nodes` and 
 - OpenSearch is the most memory-hungry bundled component. Phase 2 replaces it with Loki.
 - Lower Prometheus retention to 7d locally. Local SLO windows can be shorter as well (see the [observability plan](observability-plan.md#local-slo-windows)).
 
-## Cloud sizing (Phase 8, optional)
+## Cloud sizing (Phases 8–9)
 
-| | AWS EKS | GCP GKE Standard |
-|---|---|---|
-| Nodes | 3 × `t3.large` (2 vCPU / 8 GB), one per AZ | 3 × `e2-standard-2` (2 vCPU / 8 GB), regional or zonal |
-| Control plane | ~$0.10/hr | One zonal cluster covered by the free-tier credit |
-| Extras | NAT gateway, load balancer, EBS | Load balancer, persistent disk |
-| **Rough cost** | **~$0.40–0.60/hr** while running | **~$0.25–0.40/hr** while running |
+**Primary: AWS EKS.** The full cost and SRE-coverage comparison is in [ADR-0002](adr/0002-cloud-provider.md).
 
+| | **AWS EKS (primary)** | Azure AKS (optional comparison) | GCP GKE (cheapest) |
+|---|---|---|---|
+| Nodes | 3 × `t3.large` (2 vCPU / 8 GB), one per AZ; Karpenter for scale-out | 3 × `Standard_D2s_v5` (2 vCPU / 8 GB) across 3 zones; 30 GB OS disks | 3 × `e2-standard-2` (2 vCPU / 8 GB); 30 GB boot disks |
+| Control plane | ~$0.10/hr | $0 (Free tier) | Covered by the free-tier credit (one zonal cluster) |
+| Extras | NAT gateway, NLB, EBS | Load balancer (no NAT needed), managed disks | Load balancer, persistent disk, Cloud NAT |
+| Managed chaos | AWS FIS (AZ power interruption) | Azure Chaos Studio | None (use Chaos Mesh) |
+| **Rough cost** | **~$0.45/hr** on-demand, ~$0.29/hr with Spot | **~$0.35/hr** on-demand, ~$0.21/hr with Spot | **~$0.25/hr** on-demand, ~$0.11/hr with Spot |
+
+For the full per-component, per-phase breakdown and hidden costs, see [lab-matrix.md §6](lab-matrix.md#6-cost-estimates).
 Prices change, so check the AWS or GCP pricing calculator before building. To keep costs low:
 - Provision everything with **Terraform** and run `terraform destroy` after every session. A 4-hour session costs about $2.
 - Use Spot or Preemptible nodes for the worker pool. Being interrupted is chaos practice for free.

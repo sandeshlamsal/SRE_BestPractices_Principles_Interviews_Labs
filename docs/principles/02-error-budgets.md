@@ -64,7 +64,7 @@ or
   slo:checkout_errors:ratio_rate30m > (6 * 0.005)
 )
 ```
-Sloth or Pyrra generates these recording rules and alerts from a short SLO spec.
+Sloth generates these recording rules and alerts from a short SLO spec.
 
 ## The error budget policy
 A budget does nothing unless there's an agreed policy for what happens when it runs out.

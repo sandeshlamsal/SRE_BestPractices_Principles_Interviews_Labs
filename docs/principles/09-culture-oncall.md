@@ -21,7 +21,7 @@ toil caps, and blameless postmortems.
 - Every line of code and every component is a liability that has to be kept running.
 - Prefer boring, well-understood technology. Add a new component only when it removes more complexity than it adds.
 - Delete dead code, unused flags, unused alerts, and unused dashboards.
-- **In the lab:** Phase 2 replaces the bundled stack only if the replacement is clearly better. Write an ADR for every tool you add (Chaos Mesh vs Litmus, Tempo vs Jaeger, Sloth vs Pyrra).
+- **In the lab:** Phase 2 replaces the bundled stack only if the replacement is clearly better. Write an ADR for every tool you add. The current choices and the reasons for them are in [tool-stack.md](../tool-stack.md).
 
 ## Healthy on-call
 | Practice | Why |

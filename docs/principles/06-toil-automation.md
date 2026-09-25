@@ -42,7 +42,7 @@ Don't jump straight to stage 5 for something that happens twice a year. The **ru
 |---|---|---|
 | Recreating the cluster and redeploying | `make` targets (already in place) → later Terraform + Argo CD | 0, 7, 8 |
 | Port-forwarding to find dashboards | Ingress + stable URLs | 2 |
-| Hand-writing PromQL for each SLO | Sloth or Pyrra SLO specs → generated rules | 1 |
+| Hand-writing PromQL for each SLO | Sloth SLO specs → generated rules | 1 |
 | Restarting the leaking recommendation service | Memory limits + liveness probe, then fix the code | 5 |
 | Picking and flipping flags for game days | A `scripts/gameday.sh` randomizer | 4 |
 | Checking recent changes during incidents | A Grafana annotation for every deploy and flag change | 3 |

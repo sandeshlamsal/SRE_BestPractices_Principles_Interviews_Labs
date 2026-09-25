@@ -60,7 +60,7 @@ Hardening checklist to apply as experiments uncover gaps:
 - [ ] HPA on frontend, checkout, product-catalog
 
 ### Phase 6: capacity
-- [ ] k6 or Locust test ramping checkout traffic until the latency SLO breaks. That's your **capacity**.
+- [ ] k6 test ramping checkout traffic until the latency SLO breaks. That's your **capacity**.
 - [ ] Plot throughput vs p99 and mark the "knee"
 - [ ] Set HPA targets below the knee; document capacity + headroom in `docs/capacity-plan.md`
 - [ ] Repeat with one node gone (N-1 capacity)

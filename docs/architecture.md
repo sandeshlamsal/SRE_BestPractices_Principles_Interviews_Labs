@@ -65,11 +65,11 @@ product reviews. Run `make status` to see what's actually deployed.
 │ Phase 5   Chaos Mesh (pod / network / stress faults)          │
 ├───────────────────────────────────────────────────────────────┤
 │ Phase 2-3 Observability: OTel Collector → Prometheus · Tempo  │
-│           · Loki → Grafana; Alertmanager → Slack/Discord      │
+│           · Loki → Grafana; Alertmanager → PagerDuty + Slack  │
 │           Sloth → SLO recording rules + burn-rate alerts      │
 ├───────────────────────────────────────────────────────────────┤
 │ Phase 0   Astronomy Shop (namespace: astronomy-shop)          │
 ├───────────────────────────────────────────────────────────────┤
-│           Kubernetes: kind (local) → EKS/GKE (Phase 8)        │
+│           Kubernetes: kind (local) → EKS (+AKS opt.) (Ph. 8)  │
 └───────────────────────────────────────────────────────────────┘
 ```
