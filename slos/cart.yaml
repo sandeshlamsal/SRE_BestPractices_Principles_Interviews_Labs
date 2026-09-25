@@ -1,0 +1,32 @@
+# SLO for the Add-to-cart critical user journey (POST /api/cart).
+version: "prometheus/v1"
+service: "cart"
+labels:
+  owner: "sre-lab"
+  cuj: "add-to-cart"
+slos:
+  - name: "availability"
+    objective: 99.9
+    description: "Add-to-cart requests (POST /api/cart) are not HTTP 5xx."
+    sli:
+      events:
+        error_query: >-
+          (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+          span_name="POST /api/cart",
+          http_response_status_code=~"5.."}[{{.window}}])) or vector(0))
+        total_query: >-
+          sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+          span_name="POST /api/cart",http_response_status_code!=""}[{{.window}}]))
+    alerting:
+      name: CartAvailabilityBudgetBurn
+      labels:
+        category: availability
+      annotations:
+        summary: "Add-to-cart availability error budget is burning too fast."
+        runbook: "docs/incident-response-plan.md#5-runbook-index"
+      page_alert:
+        labels:
+          severity: page
+      ticket_alert:
+        labels:
+          severity: ticket

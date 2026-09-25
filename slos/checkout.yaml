@@ -1,0 +1,67 @@
+# SLOs for the Checkout critical user journey.
+# SLI source: frontend server spans (first app hop after the Envoy edge; Envoy spans carry no route).
+# Frontend emits 2 SERVER spans per request (old + new HTTP semconv); http_response_status_code!=""
+# selects exactly one per request. Failures are classified by HTTP status, not span status
+# (OTel leaves 4xx server spans UNSET, and checkout returns 422 on failure). See phase-1 guide.
+# Baseline + rationale: docs/labs/phase-1-slos.md
+version: "prometheus/v1"
+service: "checkout"
+labels:
+  owner: "sre-lab"
+  cuj: "checkout"
+slos:
+  - name: "availability"
+    objective: 99.5
+    description: "Checkout requests (POST /api/checkout) succeed: not HTTP 5xx and not 422 (the frontend's failed-order response)."
+    sli:
+      events:
+        error_query: >-
+          (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+          span_name="POST /api/checkout",
+          http_response_status_code=~"5..|422"}[{{.window}}])) or vector(0))
+        total_query: >-
+          sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+          span_name="POST /api/checkout",http_response_status_code!=""}[{{.window}}]))
+    alerting:
+      name: CheckoutAvailabilityBudgetBurn
+      labels:
+        category: availability
+      annotations:
+        summary: "Checkout availability error budget is burning too fast."
+        runbook: "docs/incident-response-plan.md#5-runbook-index"
+      page_alert:
+        labels:
+          severity: page
+      ticket_alert:
+        labels:
+          severity: ticket
+
+  - name: "latency"
+    objective: 99
+    description: "Checkout requests complete in under 1000 ms (histogram bucket le=1000)."
+    sli:
+      events:
+        error_query: >-
+          (
+            sum(rate(traces_span_metrics_duration_milliseconds_count{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+            span_name="POST /api/checkout",http_response_status_code!=""}[{{.window}}]))
+            -
+            sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+            span_name="POST /api/checkout",le="1000",http_response_status_code!=""}[{{.window}}]))
+          )
+        total_query: >-
+          sum(rate(traces_span_metrics_duration_milliseconds_count{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+          span_name="POST /api/checkout",http_response_status_code!=""}[{{.window}}]))
+    alerting:
+      name: CheckoutLatencyBudgetBurn
+      labels:
+        category: latency
+      annotations:
+        summary: "Checkout latency error budget is burning too fast."
+        runbook: "docs/incident-response-plan.md#5-runbook-index"
+      page_alert:
+        labels:
+          severity: page
+      ticket_alert:
+        labels:
+          severity: ticket

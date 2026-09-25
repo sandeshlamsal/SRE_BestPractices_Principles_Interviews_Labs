@@ -1,0 +1,63 @@
+# SLOs for the Browse catalog critical user journey.
+# Covers product list + product detail APIs: GET /api/products/index, GET /api/products/[productId]/index
+version: "prometheus/v1"
+service: "browse"
+labels:
+  owner: "sre-lab"
+  cuj: "browse"
+slos:
+  - name: "availability"
+    objective: 99.9
+    description: "Product API requests are not HTTP 5xx."
+    sli:
+      events:
+        error_query: >-
+          (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+          span_name=~"GET /api/products.*",
+          http_response_status_code=~"5.."}[{{.window}}])) or vector(0))
+        total_query: >-
+          sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+          span_name=~"GET /api/products.*",http_response_status_code!=""}[{{.window}}]))
+    alerting:
+      name: BrowseAvailabilityBudgetBurn
+      labels:
+        category: availability
+      annotations:
+        summary: "Browse availability error budget is burning too fast."
+        runbook: "docs/incident-response-plan.md#5-runbook-index"
+      page_alert:
+        labels:
+          severity: page
+      ticket_alert:
+        labels:
+          severity: ticket
+
+  - name: "latency"
+    objective: 99
+    description: "Product API requests complete in under 400 ms (histogram bucket le=400)."
+    sli:
+      events:
+        error_query: >-
+          (
+            sum(rate(traces_span_metrics_duration_milliseconds_count{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+            span_name=~"GET /api/products.*",http_response_status_code!=""}[{{.window}}]))
+            -
+            sum(rate(traces_span_metrics_duration_milliseconds_bucket{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+            span_name=~"GET /api/products.*",le="400",http_response_status_code!=""}[{{.window}}]))
+          )
+        total_query: >-
+          sum(rate(traces_span_metrics_duration_milliseconds_count{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+          span_name=~"GET /api/products.*",http_response_status_code!=""}[{{.window}}]))
+    alerting:
+      name: BrowseLatencyBudgetBurn
+      labels:
+        category: latency
+      annotations:
+        summary: "Browse latency error budget is burning too fast."
+        runbook: "docs/incident-response-plan.md#5-runbook-index"
+      page_alert:
+        labels:
+          severity: page
+      ticket_alert:
+        labels:
+          severity: ticket

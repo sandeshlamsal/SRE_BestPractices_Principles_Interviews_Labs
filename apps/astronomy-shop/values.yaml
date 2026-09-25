@@ -15,3 +15,38 @@ components:
     enabled: false
   mcp:
     enabled: false
+
+prometheus:
+  # Phase 1: reload rule changes live (production habit) instead of restarting Prometheus.
+  # The configmap-reload sidecar calls /-/reload, which needs --web.enable-lifecycle.
+  configmapReload:
+    prometheus:
+      enabled: true
+  server:
+    # Helm REPLACES lists, so the chart's default flags must be repeated here.
+    extraFlags:
+      - "enable-feature=exemplar-storage"
+      - "web.enable-otlp-receiver"
+      - "web.enable-lifecycle"
+  # SLO recording + alerting rules are supplied by values-slo-rules.yaml (generated: make slo-rules).
+
+grafana:
+  # Phase 1 ISSUE: Grafana was OOMKilled (exit 137) at the chart default 300Mi limit while rendering
+  # the SLO dashboard (5 repeated SLO rows × ~8 queries). Sized for real load, not the demo default.
+  # See docs/labs/phase-1-slos.md -> Issues log, P1-ISSUE-4.
+  resources:
+    requests:
+      memory: 384Mi
+    limits:
+      memory: 768Mi
+
+opentelemetry-collector:
+  config:
+    connectors:
+      span_metrics:
+        # Phase 1 P1-ISSUE-5: add HTTP status as a metric dimension so SLIs can classify
+        # failures by status code. OTel marks HTTP *server* spans ERROR only for 5xx, but the
+        # frontend returns 422 for failed checkouts -> status-based SLIs missed real failures.
+        dimensions:
+          - name: http.response.status_code   # current semconv (frontend, most services)
+          - name: http.status_code            # legacy semconv (Envoy frontend-proxy)
