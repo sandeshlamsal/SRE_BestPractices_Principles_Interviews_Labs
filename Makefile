@@ -12,7 +12,7 @@ LOKI_VERSION  := 18.13.5
 
 # Observability stack (Phase 2)
 .PHONY: obs-secrets obs-up obs-down grafana-password
-.PHONY: help cluster-up cluster-down deploy undeploy status open slo-rules prom dashboards monitors alerting check-runbooks awake
+.PHONY: help cluster-up cluster-down deploy undeploy status open slo-rules prom dashboards monitors alerting check-runbooks test-routing awake
 
 help: ## Show targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -42,6 +42,9 @@ monitors: ## Apply ServiceMonitors/PodMonitors/extra rules in observability/moni
 alerting: ## Apply Alertmanager routing (needs Secret observability/alerting-secrets; see Phase 3 guide)
 	@kubectl -n $(OBS_NS) get secret alerting-secrets >/dev/null 2>&1 || { echo "Missing Secret $(OBS_NS)/alerting-secrets (PagerDuty key + Slack webhooks). See docs/labs/phase-3-alerting.md"; exit 1; }
 	kubectl apply -f observability/alerting/alertmanagerconfig.yaml
+
+test-routing: ## Unit-test Alertmanager routing (no credentials needed)
+	scripts/test-alert-routing.sh
 
 check-runbooks: ## Verify every alert rule in the repo has a runbook that exists in runbooks/
 	scripts/check-runbooks.sh

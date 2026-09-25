@@ -86,6 +86,22 @@ Credentials come from Secret `observability/alerting-secrets` and are **never in
 kubectl apply --dry-run=server -f observability/alerting/alertmanagerconfig.yaml      # validated against the CRD
 ```
 
+### Unit-test the routing (no credentials needed)
+```bash
+make test-routing      # scripts/test-alert-routing.sh
+```
+The script **converts the real CR** into a plain `alertmanager.yml` with dummy secrets, runs `amtool check-config`,
+then asserts the receivers for 11 alerts (`amtool config routes test`). Result: **11/11 PASS**:
+
+| Alert | Receivers |
+|---|---|
+| SLO burn / SLIDataMissing / TelemetryPipelineStale, `severity=page` | `pagerduty, slack-pages` |
+| SLO burn / thrashing, `severity=ticket`; kps `critical`/`warning` | `slack-alerts` |
+| An alert **with no severity** | `slack-alerts` (a safe default, never dropped silently) |
+| `Watchdog`, `InfoInhibitor`, `severity=info` | `null` |
+
+Routing is code, so it gets tests. Run this in CI (Phase 7) so a routing change can't silently stop pages.
+
 ### ⏳ Pending: create the secret (you), then wire it up
 1. Slack: workspace + channels `#pages`, `#alerts` → an app with **Incoming Webhooks** → one webhook per channel.
 2. PagerDuty (free): service `astronomy-shop` → Integrations → **Events API V2** → copy the Integration Key.
@@ -110,3 +126,4 @@ make alerting     # refuses to run until the secret exists
 | P3-ISSUE-4 | Signal choice | Candidate thrashing signals were misleading | Major faults false-positive (load-generator); `container_spec_memory_limit_bytes` missing | `container_memory_failcnt` (= limit hits) + kube-state-metrics limits |
 | P3-ISSUE-5 | Detection | A partial failure (1 of 10 products, 8% errors) needs ~11 min to page | The page condition needs **both** 5m and 1h above 14.4 × 0.1%; the 1h average dilutes a new partial failure | By design (multi-window avoids flapping); record time to detect per scenario |
 | P3-ISSUE-6 | Alerting | `SLIDataMissing` pending during the sleep gap | Real data loss (the VM was frozen) | **Worked as designed.** In real life a gap like that should page |
+| P3-ISSUE-7 | Tooling | `$AM config routes test ...` → `no such file or directory: docker run ...` | zsh doesn't word-split `$VAR` (same as P2-ISSUE-13) | Put multi-word commands in bash scripts or functions: `scripts/test-alert-routing.sh` |
