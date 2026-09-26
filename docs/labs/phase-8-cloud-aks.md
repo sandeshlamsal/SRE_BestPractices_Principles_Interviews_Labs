@@ -98,8 +98,19 @@ kubectl config get-contexts        # kind-sre-lab (local) vs sre-lab-aks (cloud)
 | 13:25:08 | Retry **with** zones on the new size | ❌ `AvailabilityZoneNotSupported`, **supported zones ''**: no zone access for any size |
 | 13:25:54 | Apply | ❌ still sent B2ms: my edit to variables.tf **silently didn't match** after `terraform fmt` (P8-ISSUE-6) |
 | 13:28:15 | Fixed edit, **verified in `terraform plan`** (`vm_size = Standard_D2as_v7`), apply | ✅ `Creating`: 3 × D2as_v7, k8s 1.35, Free tier |
+| 13:32:39 | **Teardown requested mid-creation** (owner leaving) | `az group delete -n sre-lab-rg --yes --no-wait` + the node RG `MC_sre-lab-rg_sre-lab-aks_eastus`; Terraform apply interrupted; `terraform state rm` for all resources (state = `[]`) |
 
 ---
+
+### Emergency teardown (when `terraform destroy` isn't an option, e.g. mid-create)
+```bash
+az group delete -n sre-lab-rg --yes --no-wait                         # cluster, budget, everything in the RG
+az group delete -n MC_sre-lab-rg_sre-lab-aks_eastus --yes --no-wait   # AKS node RG (VMs/disks/LB) if it lingers
+cd infra/azure && for r in $(terraform state list); do terraform state rm "$r"; done   # keep state truthful
+az group list --query "[?contains(name,'sre-lab')].{n:name,s:properties.provisioningState}" -o table   # verify: empty
+```
+Azure performs the delete server-side, so it completes even if the laptop sleeps.
+**Before the next session:** confirm nothing is left: `az group list ... contains(name,'sre-lab')` → empty.
 
 ## Issues log
 | ID | Area | Symptom | Root cause | Fix / decision |
