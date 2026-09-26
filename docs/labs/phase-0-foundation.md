@@ -1,4 +1,5 @@
 # Phase 0: Foundation (Execution Guide)
+**Phase 0** · [All phases](README.md) · [Phase 1: SLOs →](phase-1-slos.md)
 
 > **Goal:** a 3-node local Kubernetes cluster running the Astronomy Shop, and you can trace one
 > checkout request from end to end.
@@ -313,3 +314,6 @@ make undeploy        # remove the shop, keep the cluster
 make cluster-down    # delete the whole cluster (everything is in Git, so rebuilding is cheap)
 make cluster-up && make deploy   # full rebuild
 ```
+
+---
+**Phase 0** · [All phases](README.md) · [Phase 1: SLOs →](phase-1-slos.md)

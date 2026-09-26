@@ -1,4 +1,5 @@
 # Phase 6: Capacity and Performance (Execution Guide)
+**Phase 6** · [← Phase 5: Chaos](phase-5-resilience-chaos.md) · [All phases](README.md) · [Phase 7: GitOps →](phase-7-gitops.md)
 
 > **Goal:** find the traffic level where the SLO breaks (the *knee*), the component that saturates first, and the headroom.
 > **Principles:** [08 Capacity](../principles/08-capacity-resilience-chaos.md). **Executed:** 2026-09-26 04:17–04:25 UTC.
@@ -58,3 +59,6 @@ Metrics couldn't show this. **One trace did.**
 | P6-ISSUE-1 | Capacity | Throughput collapses above ~58 req/s; 51% errors at 100 VUs | Product-catalog requests queue ~68 s before a 43 ms DB query (pool/concurrency starvation) | Open: raise pool / scale product-catalog, then re-test |
 | P6-ISSUE-2 | Resilience | Overload produced 15 s timeouts, not fast failures | No load shedding; long timeouts turn overload into collapse | Open: shorter timeouts + Envoy load shedding |
 | P6-ISSUE-3 | Tooling | Grafana/Tempo API returned non-JSON after the hardening deploy | The `:8080` port-forward was bound to a replaced frontend-proxy pod (P2-ISSUE-7 again) | Restart `make open` after rollouts |
+
+---
+**Phase 6** · [← Phase 5: Chaos](phase-5-resilience-chaos.md) · [All phases](README.md) · [Phase 7: GitOps →](phase-7-gitops.md)

@@ -1,4 +1,5 @@
 # Phase 1: SLIs, SLOs and Error Budgets (Execution Guide)
+**Phase 1** · [← Phase 0: Foundation](phase-0-foundation.md) · [All phases](README.md) · [Phase 2: Observability →](phase-2-observability.md)
 
 > **Goal:** SLOs for the shop's critical user journeys, written as code; burn-rate alerts;
 > an error-budget dashboard; and **proof that it all works**, by injecting a real failure.
@@ -316,3 +317,6 @@ make dashboards
 scripts/flag.sh set paymentFailure 50%   # watch the dashboard; page fires within ~4-5 min
 scripts/flag.sh reset
 ```
+
+---
+**Phase 1** · [← Phase 0: Foundation](phase-0-foundation.md) · [All phases](README.md) · [Phase 2: Observability →](phase-2-observability.md)

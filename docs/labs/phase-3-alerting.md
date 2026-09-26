@@ -1,4 +1,5 @@
 # Phase 3: Alerting and On-Call (Execution Guide)
+**Phase 3** · [← Phase 2: Observability](phase-2-observability.md) · [All phases](README.md) · [Phase 4: Game days →](phase-4-incident-response.md)
 
 > **Goal:** every alert that reaches a human is **symptom-based, actionable, routed to the right place, and linked to a runbook**.
 > Pages go to PagerDuty + Slack `#pages`; tickets go to Slack `#alerts` ([ADR-0003](../adr/0003-paging-and-incident-tooling.md)).
@@ -204,3 +205,6 @@ kubectl -n observability logs deploy/alert-sink -f &
 scripts/flag.sh set paymentFailure 50%    # expect a page in ~5-6 min on /pagerduty + /slack-pages
 scripts/flag.sh reset                     # expect RESOLVED ~10 min later
 ```
+
+---
+**Phase 3** · [← Phase 2: Observability](phase-2-observability.md) · [All phases](README.md) · [Phase 4: Game days →](phase-4-incident-response.md)

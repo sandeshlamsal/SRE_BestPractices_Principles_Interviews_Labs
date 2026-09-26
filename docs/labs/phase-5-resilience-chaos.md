@@ -1,4 +1,5 @@
 # Phase 5: Resilience and Chaos Engineering (Execution Guide)
+**Phase 5** · [← Phase 4: Game days](phase-4-incident-response.md) · [All phases](README.md) · [Phase 6: Capacity →](phase-6-capacity.md)
 
 > **Goal:** find where the system is actually fragile, using **hypothesis-driven experiments with abort conditions**,
 > then harden it and **prove** the improvement by re-running the same experiment.
@@ -142,3 +143,6 @@ post-renderer), a replicated flagd, and a node-failure test on worker2.
 | P5-ISSUE-8 | Experiment safety | The abort (`docker start`) was inside a loop that could hang on `kubectl logs` for a dead node | Abort depended on the broken component | **Independent safety timer.** An abort must never depend on what you broke |
 | P5-ISSUE-9 | Chart | gRPC/TCP probes rejected: "additional properties 'grpc' not allowed" | The demo chart's values schema only allows `httpGet` probes | **Post-renderer** (keeps schema validation for everything else; `--skip-schema-validation` would disable it all) |
 | P5-ISSUE-10 | Rollout | Pager with 2 replicas + *required* anti-affinity on 2 nodes would deadlock | The default rollout surges a 3rd pod that fits nowhere | `maxSurge: 0, maxUnavailable: 1` |
+
+---
+**Phase 5** · [← Phase 4: Game days](phase-4-incident-response.md) · [All phases](README.md) · [Phase 6: Capacity →](phase-6-capacity.md)

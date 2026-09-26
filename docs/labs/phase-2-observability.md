@@ -1,4 +1,5 @@
 # Phase 2: Observability Platform (Execution Guide)
+**Phase 2** · [← Phase 1: SLOs](phase-1-slos.md) · [All phases](README.md) · [Phase 3: Alerting →](phase-3-alerting.md)
 
 > **Goal:** replace the demo's bundled telemetry backends with a production-style platform
 > (kube-prometheus-stack + Tempo + Loki on persistent storage), keep the SLOs working, link
@@ -275,3 +276,6 @@ make cluster-up && make obs-up && make deploy && make slo-rules && make monitors
 make open            # http://localhost:8080 (shop) and http://localhost:8080/grafana (admin / make grafana-password)
 make prom            # http://localhost:9090
 ```
+
+---
+**Phase 2** · [← Phase 1: SLOs](phase-1-slos.md) · [All phases](README.md) · [Phase 3: Alerting →](phase-3-alerting.md)

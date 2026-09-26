@@ -20,15 +20,22 @@ make status
 make open         # http://localhost:8080
 ```
 
-## Progress
+## Progress: all 10 phases done
 
-| Phase | Status |
-|---|---|
-| 0 Foundation · 1 SLOs · 2 Observability | ✅ done |
-| 3 Alerting & on-call | ✅ done (real PagerDuty/Slack pending credentials) |
-| 4 Incident game days | ✅ (your blind game day pending) |
-| 5 Resilience · 6 Capacity · 7 GitOps/CI/canary · 8 Cloud (AKS) | ✅ |
-| 9 DR + production readiness review | ✅ (RTO 142 s, RPO 1 order; PRR scorecard) |
+**➡️ Start here: [docs/labs/README.md](docs/labs/README.md)** has every phase on one page, with reading paths, jump links and the key commands.
+
+| # | Phase | Headline result | Status |
+|---|---|---|---|
+| 0 | [Foundation](docs/labs/phase-0-foundation.md) | Shop on a 3-node kind cluster; one checkout traced end to end | ✅ |
+| 1 | [SLIs, SLOs, error budgets](docs/labs/phase-1-slos.md) | SLOs as code; found an SLI blind to a 50% outage | ✅ |
+| 2 | [Observability platform](docs/labs/phase-2-observability.md) | Prometheus + Tempo + Loki; alert → trace → log in < 2 min | ✅ |
+| 3 | [Alerting & on-call](docs/labs/phase-3-alerting.md) | Every alert has a runbook; routing tests 11/11 | ✅ real PagerDuty/Slack pending |
+| 4 | [Incident game days](docs/labs/phase-4-incident-response.md) | Silent "charged but cart not cleared" bug → correctness SLO | ✅ blind game day pending |
+| 5 | [Resilience & chaos](docs/labs/phase-5-resilience-chaos.md) | Node loss: user errors 47% → 3.1% | ✅ |
+| 6 | [Capacity](docs/labs/phase-6-capacity.md) | Breaks at ~58 req/s (~4× headroom) | ✅ |
+| 7 | [CI, GitOps, canary](docs/labs/phase-7-gitops.md) | SLO-gated canary rolled back a bad release in ~70 s | ✅ |
+| 8 | [Cloud (Azure AKS)](docs/labs/phase-8-cloud-aks.md) | Same repo on AKS for ~$0.31/hr | ✅ torn down |
+| 9 | [DR + production readiness](docs/labs/phase-9-dr-prr.md) | RTO 142 s, RPO 1 order; readiness scorecard | ✅ |
 
 Highlights: an SLI that was blind to a 50% outage, found and fixed; memory-limit thrashing with zero OOM kills;
 and a root cause we got **wrong** and corrected in the open ([sre-in-practice.md](docs/sre-in-practice.md)).
@@ -53,5 +60,5 @@ and a root cause we got **wrong** and corrected in the open ([sre-in-practice.md
 | [platform/](platform/) | Cluster and infrastructure config |
 | [apps/](apps/) | Helm values for workloads |
 
-Directories for `slos/`, `alerts/`, `runbooks/`, `postmortems/`, `chaos/`, and
-`interviews/` get added in their roadmap phases.
+SLOs, runbooks, postmortems, chaos experiments, load tests, GitOps apps and Terraform each have their own top-level
+directory. See [where things live](docs/labs/README.md#where-things-live).

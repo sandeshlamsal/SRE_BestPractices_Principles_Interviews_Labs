@@ -1,4 +1,5 @@
 # Phase 4: Incident Response Game Days (Execution Guide)
+**Phase 4** · [← Phase 3: Alerting](phase-3-alerting.md) · [All phases](README.md) · [Phase 5: Chaos →](phase-5-resilience-chaos.md)
 
 > **Goal:** practice the full incident lifecycle (detect → declare → roles → mitigate → verify → postmortem) on
 > realistic, repeatable failures, and let each game day improve the system.
@@ -97,3 +98,6 @@ noise was 0.0, so it was tightened to **99.9%**, and it **pages**.
 ## Next
 - **Blind game days** (you): `scripts/gameday.sh start`, respond from alerts and runbooks only, write the postmortem from the template, add a row to the index.
 - Email-delivery SLI (P4-ISSUE-7). Kafka durability (P4-ISSUE-8, scheduled for Phase 5). Blind game days.
+
+---
+**Phase 4** · [← Phase 3: Alerting](phase-3-alerting.md) · [All phases](README.md) · [Phase 5: Chaos →](phase-5-resilience-chaos.md)

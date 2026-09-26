@@ -1,4 +1,5 @@
 # Phase 7: Release Engineering, CI and GitOps (Execution Guide)
+**Phase 7** · [← Phase 6: Capacity](phase-6-capacity.md) · [All phases](README.md) · [Phase 8: AKS →](phase-8-cloud-aks.md)
 
 > **Goal:** every change is validated automatically and reaches the cluster only through Git.
 > **Principles:** [07 Release engineering](../principles/07-release-engineering.md), [06 Toil](../principles/06-toil-automation.md).
@@ -89,3 +90,6 @@ takes 50% **before** full exposure, plus a per-version SLI (span metrics current
 | P7-ISSUE-6 | GitOps | `sre-lab-config` permanently OutOfSync on the PodMonitor | The CRD defaults `action: replace` into relabelings; Git didn't have it | State the default explicitly in Git (preferred over `ignoreDifferences`, which would hide real drift) |
 | **P7-ISSUE-7** | **Release safety** | The canary analysis passed (`0, 0, NaN`) and **promoted a bad release**; ~89% payment failures for ~2 min | gRPC connection pinning: the Service balances per connection, so the canary got ~0% traffic; the gate ran before any real exposure | Background analysis spanning a post-100% abortable soak. Re-test: **auto-rollback in ~70 s**. Proper fix: L7 traffic routing |
 | P7-ISSUE-8 | Process | Test #2 commit failed to render: `patches/bad-release.yaml: no such file` | `git revert` had deleted the patch file; only the reference was re-added | **CI failed the commit and Argo CD refused to sync** (ComparisonError) → nothing broken deployed. Defense in depth caught my mistake |
+
+---
+**Phase 7** · [← Phase 6: Capacity](phase-6-capacity.md) · [All phases](README.md) · [Phase 8: AKS →](phase-8-cloud-aks.md)

@@ -1,4 +1,5 @@
 # Phase 9 (Capstone): Disaster Recovery + Production Readiness Review
+**Phase 9** · [← Phase 8: AKS](phase-8-cloud-aks.md) · [All phases](README.md)
 
 > **Goal:** prove the shop can be recovered from a disaster within stated targets, then honestly assess how
 > production-ready the whole lab is. **Principles:** [05 Postmortems](../principles/05-postmortems.md), [08 Resilience](../principles/08-capacity-resilience-chaos.md),
@@ -139,3 +140,6 @@ Legend: ✅ ready (evidence) · ⚠️ partial · ❌ not ready
 | P9-ISSUE-1 | DR / GitOps | After the rebuild, the namespace lacked `chaos-mesh.org/inject=enabled` | It was added imperatively (`kubectl annotate`), not in Git | `managedNamespaceMetadata` in the Argo Application; verified |
 | P9-ISSUE-2 | DR procedure | Orders written between rebuild and restore would be wiped | `pg_restore --clean` replaces tables | Runbook: restore before reopening traffic / pause writers |
 | P9-ISSUE-3 | DR design | Backups share the cluster/node with what they protect | Lab simplification | Production: off-site, encrypted, versioned object storage + scheduled restore tests |
+
+---
+**Phase 9** · [← Phase 8: AKS](phase-8-cloud-aks.md) · [All phases](README.md)

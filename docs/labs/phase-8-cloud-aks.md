@@ -1,4 +1,5 @@
 # Phase 8: Cloud on Azure AKS (Execution Guide + AKS Reference)
+**Phase 8** · [← Phase 7: GitOps](phase-7-gitops.md) · [All phases](README.md) · [Phase 9: DR + PRR →](phase-9-dr-prr.md)
 
 > **Goal:** run the same lab (same repo, same GitOps, same SLOs) on a managed cloud cluster, and practice what kind can't:
 > real nodes, cloud load balancers, node autoscaling, cloud cost. **Decision:** Azure AKS (the owner's account) instead of AWS
@@ -190,3 +191,6 @@ the replacement was healthy immediately.
 | P8-ISSUE-10 | Recovery | Rescheduled checkout stuck in `Init` for ~90 s | `wait-for-kafka` init container + Kafka on the same failed node | Spread dependencies apart; don't hard-block startup on async dependencies |
 | **P8-ISSUE-11** | **Measurement** | Node-failure impact **unmeasurable**: 0 requests from 16:22 to 16:30 | The single-replica load generator ran on the failed node: **the traffic source was in the blast radius** | External synthetic probe (outside the cluster) for real SLO measurement |
 | P8-ISSUE-12 | Mystery | One payment replica never answered gRPC health | Unknown (the other replica was fine; the replacement was fine) | Readiness contained it; open for a deeper look |
+
+---
+**Phase 8** · [← Phase 7: GitOps](phase-7-gitops.md) · [All phases](README.md) · [Phase 9: DR + PRR →](phase-9-dr-prr.md)
