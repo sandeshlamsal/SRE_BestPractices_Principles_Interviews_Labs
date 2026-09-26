@@ -1,0 +1,361 @@
+{
+  "uid": "sre-lab-dr",
+  "title": "SRE Lab / Disaster Recovery (RPO & RTO)",
+  "tags": [
+    "sre-lab",
+    "dr"
+  ],
+  "timezone": "utc",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "description": "RPO = how much data we can lose (backup freshness). RTO = how long recovery takes (pods Ready again). Phase 9.",
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "iconColor": "red",
+        "name": "DR drill events",
+        "target": {
+          "type": "tags",
+          "tags": [
+            "dr-drill"
+          ],
+          "limit": 50,
+          "matchAny": true
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Current RPO exposure (age of last successful backup)",
+      "description": "If the database were lost NOW, orders placed in this window would be lost. Target: < 15 min (backup every 15 min).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 6
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "time() - max(kube_cronjob_status_last_successful_time{namespace=\"backups\",cronjob=\"pg-backup\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 900
+              },
+              {
+                "color": "red",
+                "value": 1200
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 2,
+      "type": "text",
+      "title": "Drill results",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 16,
+        "h": 9
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### DR drill: 2026-09-26, `kubectl delete namespace astronomy-shop`\n| | Target | **Actual** |\n|---|---|---|\n| **Stateless RTO** (Argo CD rebuild from Git) | 10 min | **136 s** \u2705 |\n| **Total RTO** (+ Postgres restore) | 15 min | **142 s** \u2705 |\n| **RPO** (orders lost) | \u2264 15 min | **1 order** (placed 28 s after the last backup) \u2705 |\n| Without the backup | \u2014 | **1,723 orders lost** |\n\nTimeline (dashed markers): backup 18:08:38 \u00b7 disaster 18:09:06 \u00b7 namespace recreated 18:10:04 \u00b7 stateless recovered 18:11:22 \u00b7 DB restored 18:11:29.\nGuide: `docs/labs/phase-9-dr-prr.md`"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Backups succeeded (jobs kept)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 8,
+        "h": 3
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(kube_job_status_succeeded{namespace=\"backups\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "RTO: shop pods Ready",
+      "description": "The dip is the outage; the time back to the full count is the stateless RTO. Dashed markers = drill events.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(kube_pod_status_ready{namespace=\"astronomy-shop\",condition=\"true\"})",
+          "legendFormat": "pods Ready",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count(kube_pod_info{namespace=\"astronomy-shop\"})",
+          "legendFormat": "pods existing",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "axisSoftMin": 0
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "User impact: checkout responses by HTTP status (per 2 min)",
+      "description": "Gaps = no data (the shop's own telemetry was deleted with it).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (http_response_status_code) (increase(traces_span_metrics_calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",span_name=\"POST /api/checkout\",http_response_status_code!=\"\"}[2m]))",
+          "legendFormat": "HTTP {{http_response_status_code}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "axisSoftMin": null
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "RPO: backup freshness over time",
+      "description": "Saw-tooth: resets at each successful backup. Crossing the dashed line = RPO target at risk.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "time() - max(kube_cronjob_status_last_successful_time{namespace=\"backups\",cronjob=\"pg-backup\"})",
+          "legendFormat": "seconds since last backup",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false,
+            "axisSoftMin": 0,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 900
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    }
+  ]
+}

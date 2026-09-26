@@ -7,4 +7,4 @@ generatorOptions:
   labels: { grafana_dashboard: "1" }
 configMapGenerator:
   - name: sre-lab-dashboards
-    files: [slo-overview.json, service-red.json, telemetry-pipeline.json]
+    files: [slo-overview.json, service-red.json, telemetry-pipeline.json, dr-rpo-rto.json]
