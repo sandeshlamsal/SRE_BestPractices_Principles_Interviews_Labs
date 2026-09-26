@@ -13,21 +13,9 @@
     "from": "now-1h",
     "to": "now"
   },
-  "description": "RPO = how much data we can lose (backup freshness). RTO = how long recovery takes (pods Ready again). Phase 9.",
+  "description": "RPO = how much data we can lose (backup freshness). RTO = how long recovery takes. Phase 9.",
   "annotations": {
     "list": [
-      {
-        "builtIn": 1,
-        "datasource": {
-          "type": "grafana",
-          "uid": "-- Grafana --"
-        },
-        "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "type": "dashboard"
-      },
       {
         "datasource": {
           "type": "grafana",
@@ -52,7 +40,7 @@
       "id": 1,
       "type": "stat",
       "title": "Current RPO exposure (age of last successful backup)",
-      "description": "If the database were lost NOW, orders placed in this window would be lost. Target: < 15 min (backup every 15 min).",
+      "description": "Data placed in this window would be lost if the DB died now. Target < 15 min.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -124,7 +112,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "### DR drill: 2026-09-26, `kubectl delete namespace astronomy-shop`\n| | Target | **Actual** |\n|---|---|---|\n| **Stateless RTO** (Argo CD rebuild from Git) | 10 min | **136 s** \u2705 |\n| **Total RTO** (+ Postgres restore) | 15 min | **142 s** \u2705 |\n| **RPO** (orders lost) | \u2264 15 min | **1 order** (placed 28 s after the last backup) \u2705 |\n| Without the backup | \u2014 | **1,723 orders lost** |\n\nTimeline (dashed markers): backup 18:08:38 \u00b7 disaster 18:09:06 \u00b7 namespace recreated 18:10:04 \u00b7 stateless recovered 18:11:22 \u00b7 DB restored 18:11:29.\nGuide: `docs/labs/phase-9-dr-prr.md`"
+        "content": "### DR drill: 2026-09-26, `kubectl delete namespace astronomy-shop`\n| | Target | **Actual** |\n|---|---|---|\n| **Stateless RTO** (Argo CD rebuild from Git) | 10 min | **136 s** \u2705 |\n| **Total RTO** (+ Postgres restore) | 15 min | **142 s** \u2705 |\n| **RPO** (orders lost) | \u2264 15 min | **1 order** (placed 28 s after the last backup) \u2705 |\n| Without the backup | \u2014 | **1,723 orders lost** |\n\nMarkers: backup 18:08:38 \u00b7 disaster 18:09:06 \u00b7 namespace recreated 18:10:04 \u00b7 stateless recovered 18:11:22 \u00b7 DB restored 18:11:29"
       }
     },
     {
@@ -177,7 +165,7 @@
       "id": 4,
       "type": "timeseries",
       "title": "RTO: shop pods Ready",
-      "description": "The dip is the outage; the time back to the full count is the stateless RTO. Dashed markers = drill events.",
+      "description": "The dip is the outage; back to the full count = stateless RTO. Red markers = drill events.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -239,7 +227,7 @@
       "id": 5,
       "type": "timeseries",
       "title": "User impact: checkout responses by HTTP status (per 2 min)",
-      "description": "Gaps = no data (the shop's own telemetry was deleted with it).",
+      "description": "Gaps = no data (the shop's telemetry was deleted with it).",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -292,7 +280,7 @@
       "id": 6,
       "type": "timeseries",
       "title": "RPO: backup freshness over time",
-      "description": "Saw-tooth: resets at each successful backup. Crossing the dashed line = RPO target at risk.",
+      "description": "Saw-tooth: resets at each backup. Crossing the dashed line = RPO target at risk.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
