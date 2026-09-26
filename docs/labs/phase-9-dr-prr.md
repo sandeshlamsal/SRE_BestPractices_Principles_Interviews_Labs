@@ -45,6 +45,43 @@ $TMPDIR/dr-drill.sh     # captured in this guide; delete ns → wait for Argo re
 | RPO | ≤ 15 min of orders | **1 order lost** (placed in the 28 s between the last backup and the disaster) ✅ |
 | Without a backup | — | **All 1,723 orders lost** |
 
+### Seeing RPO and RTO: the Grafana dashboard
+Dashboard **SRE Lab / Disaster Recovery (RPO & RTO)** ([dr-rpo-rto.json](../../observability/dashboards/dr-rpo-rto.json), synced by Argo CD).
+The red dashed lines are Grafana annotations tagged `dr-drill`, one per drill event (commands below).
+
+**The drill window (18:05–18:16 UTC):**
+
+![DR drill: RTO and RPO over the drill window](img-phase9-dr-drill.png)
+
+How to read it:
+- **RTO: shop pods Ready.** 37 pods are Ready until the delete (18:09:06). The series then **disappears**: with the namespace gone,
+  kube-state-metrics has nothing to report, so the gap *is* the outage. The pods come back at ~18:11 and reach 37/37 Ready at
+  18:11:22 (**136 s**). The DB restore marker follows at 18:11:29 (**142 s total**).
+- **User impact.** Checkout traffic stops during the outage. The load generator lives **in the deleted namespace**, so it died too:
+  the same "monitor inside the blast radius" gap as P8-ISSUE-11 (PRR row 5). After recovery there is a short burst of HTTP 500s.
+  The panel counts per 2 min, so it lags the events by about a minute.
+- **RPO: backup freshness.** A sawtooth. Backup age climbs linearly and drops to ~0 each time the `*/15` CronJob succeeds (here at 18:15).
+  **The worst-case RPO is the peak of the sawtooth.** It must stay under 15 min; the alert threshold is 900 s.
+- **Current RPO exposure.** The same number right now. It is green under 15 min, amber at 15–20 min, and red above 20 min
+  (a missed backup).
+
+**Steady state (last 3 h):** the drill is the only dip in pods Ready. The RPO gauge reads "7 mins", meaning an incident now would lose
+up to 7 minutes of orders.
+
+![DR dashboard, last 3 hours](img-phase9-dr-now.png)
+
+Earlier gaps in the RTO panel (15:30–15:55) are not DR events. They predate the drill.
+
+Adding the drill annotations (Grafana HTTP API; repeat for each event):
+```bash
+PW=$(make -s grafana-password)
+MS=$(python3 -c "import datetime as d;print(int(d.datetime(2026,9,26,18,9,6,tzinfo=d.timezone.utc).timestamp()*1000))")
+curl -s -X POST "http://admin:$PW@localhost:8080/grafana/api/annotations" -H 'Content-Type: application/json' \
+  -d "{\"time\":$MS,\"tags\":[\"dr-drill\"],\"text\":\"DISASTER: namespace deleted (1,723 orders)\"}"
+```
+Annotations are stored in Grafana's database, not in Git. If Grafana is rebuilt without persistence, they are gone.
+**The durable record of the drill is this document.**
+
 ### What the drill taught
 1. **Git is the recovery plan for everything stateless.** All 13 PDBs, the canary Rollout, SLO rules, alerts and dashboards came back automatically.
 2. **Anything not in Git is lost.** The namespace's Chaos Mesh opt-in annotation (added by hand in `make chaos-up`) **did not come back**.
