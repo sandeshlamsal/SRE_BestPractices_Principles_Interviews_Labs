@@ -17,3 +17,4 @@ resources:
   - rollout-checkout.yaml          # canary for checkout (Phase 7)
 patches:
   - path: patches/probes.yaml
+  - path: patches/bad-release.yaml   # TEMPORARY: canary rollback test
