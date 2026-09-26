@@ -13,5 +13,7 @@ helmCharts:
     valuesFile: values.yaml
     additionalValuesFiles:
       - values-resilience.yaml
+resources:
+  - rollout-checkout.yaml          # canary for checkout (Phase 7)
 patches:
   - path: patches/probes.yaml

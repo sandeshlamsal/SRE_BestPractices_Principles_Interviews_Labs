@@ -7,6 +7,13 @@ spec:
   project: default
   source: { repoURL: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs, targetRevision: main, path: apps/astronomy-shop }
   destination: { server: https://kubernetes.default.svc, namespace: astronomy-shop }
+  # The checkout Rollout scales the chart's Deployment to 0 (workloadRef, scaleDown: progressively).
+  # Without this, selfHeal would scale it back up and fight the Rollout.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: checkout
+      jsonPointers: [/spec/replicas]
   syncPolicy:
     automated: { prune: true, selfHeal: true }
-    syncOptions: [ServerSideApply=true, CreateNamespace=true]
+    syncOptions: [ServerSideApply=true, CreateNamespace=true, RespectIgnoreDifferences=true]

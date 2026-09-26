@@ -1,0 +1,51 @@
+# Canary releases for checkout (Phase 7). The Rollout REFERENCES the chart's Deployment (workloadRef) and
+# progressively scales it down as canary/stable pods become ready (zero-downtime migration).
+# A change to the Deployment's pod template in Git -> Argo CD syncs -> the Rollout runs a canary:
+#   50% (1 of 2 pods) -> 2 min soak -> SLO analysis (checkout errors < 5%) -> 100%.  Failed analysis = automatic rollback.
+# Limitation: no service mesh, so the traffic split = replica ratio, and the SLI is the whole checkout (not per version).
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: checkout
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      opentelemetry.io/name: checkout
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: checkout
+    scaleDown: progressively
+  strategy:
+    canary:
+      steps:
+        - setWeight: 50
+        - pause: { duration: 2m }                 # soak: span metrics flush every ~60 s
+        - analysis:
+            templates:
+              - templateName: checkout-slo
+        - setWeight: 100
+---
+# SLO-based release gate: the same SLI as the checkout-availability SLO (HTTP 5xx or 422 = bad).
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: checkout-slo
+spec:
+  metrics:
+    - name: checkout-error-ratio
+      interval: 60s
+      count: 3
+      failureLimit: 1
+      successCondition: result[0] < 0.05
+      provider:
+        prometheus:
+          address: http://kps-prometheus.observability:9090
+          query: |
+            (sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+              span_name="POST /api/checkout",http_response_status_code=~"5..|422"}[2m])) or vector(0))
+            /
+            sum(rate(traces_span_metrics_calls_total{service_name="frontend",span_kind="SPAN_KIND_SERVER",
+              span_name="POST /api/checkout",http_response_status_code!=""}[2m]))

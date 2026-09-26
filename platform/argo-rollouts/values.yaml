@@ -1,0 +1,5 @@
+# Argo Rollouts (chart pinned in Makefile: ROLLOUTS_VERSION). Namespace: argo-rollouts. Phase 7 canary releases.
+dashboard:
+  enabled: false
+controller:
+  replicas: 1

@@ -11,6 +11,7 @@ TEMPO_VERSION := 3.0.0
 LOKI_VERSION  := 18.13.5
 CHAOS_MESH_VERSION := 2.8.4
 ARGOCD_VERSION := 10.9.2
+ROLLOUTS_VERSION := 2.43.2
 
 # Observability stack (Phase 2)
 .PHONY: obs-secrets obs-up obs-down grafana-password chaos-up
@@ -65,6 +66,13 @@ argocd-up: ## Install Argo CD and register the GitOps Applications (gitops/apps/
 	helm upgrade --install argocd argo/argo-cd --version $(ARGOCD_VERSION) -n argocd --create-namespace \
 	  -f platform/argocd/values.yaml --wait --timeout 10m
 	kubectl apply -f gitops/apps/
+
+rollouts-up: ## Install the Argo Rollouts controller (canary releases)
+	helm upgrade --install argo-rollouts argo/argo-rollouts --version $(ROLLOUTS_VERSION) -n argo-rollouts --create-namespace \
+	  -f platform/argo-rollouts/values.yaml --wait --timeout 10m
+
+rollout-status: ## Show the checkout canary Rollout
+	kubectl -n $(NAMESPACE) get rollout checkout -o wide; kubectl -n $(NAMESPACE) get analysisrun --sort-by=.metadata.creationTimestamp | tail -3
 
 argocd-status: ## Show Argo CD application sync/health
 	kubectl -n argocd get applications
