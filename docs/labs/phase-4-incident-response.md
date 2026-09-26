@@ -42,7 +42,7 @@ Full record: [incident](../../incidents/2026-09-25-gd1-cart-not-cleared.md) · *
 | **Actual** | `AddItem` fine; **`EmptyCart` failed 46%** after payment; checkout still **200**; **no alert for 10+ min** |
 | Impact | **17 of 37 orders** charged with the cart not cleared (duplicate-order risk) |
 | Detected by | the game-day team investigating why the expected page **didn't** come |
-| Fix | new **correctness SLO** `checkout-order-integrity` (99.9%) + runbook; the page reaches both routes |
+| Fix | new **correctness SLO** `checkout-order-integrity` (99.9%) + runbook; **clean re-test: page in 103 s** (was: never) |
 
 **Lessons:**
 1. Availability and latency SLIs can't see *"succeeded but did the wrong thing"*. You need **correctness SLIs** for key invariants.
@@ -92,8 +92,8 @@ noise was 0.0, so it was tightened to **99.9%**, and it **pages**.
 | P4-ISSUE-7 | Coverage | Email down 3 min: 4 orders, 4 confirmations lost, no SLO noticed | email is best-effort in PlaceOrder; no delivery SLI | **Open:** email-delivery SLI needs the checkout→email client span, but all outbound HTTP spans are named just `POST` (can't tell email from shipping) → add a `server.address`/`url.path` span-metrics dimension |
 | **P4-ISSUE-8** | **Data loss** | Kafka down 3 min: **~13 orders never processed** (4 during the outage + 9 skipped at re-subscribe); producer span OK; lag 0; pods healthy | Async producer (queued ≠ delivered), in-memory broker (restart wipes the topic), consumers re-join at `latest` | End-to-end **completeness SLO** (99.9%, pages). **Backlog:** Kafka persistence (PVC) + `acks=all`, producer delivery callbacks that mark spans ERROR, consumer `auto.offset.reset=earliest` + idempotent processing |
 | P4-ISSUE-9 | SLO tuning | Completeness at 99% → 13 lost orders = ticket only | Objective chosen from *fear* of noise, not data | Measured noise (0.0) → 99.9% → pages. **Set objectives from measurements, and by the cost of the failure** (lost money ≠ slow page) |
-| P4-ISSUE-10 | Verification | GD1 AI-4 (clean time-to-detect) can't be measured now | The 6h page window holds GD1's errors until ~03:15 UTC | Deferred until the windows are clean, rather than publishing another confounded number |
+| P4-ISSUE-10 | Verification | GD1 AI-4 (clean time-to-detect) couldn't be measured right after the incident | The 6h page window held GD1's errors | Waited until **every** window read exactly 0.0 (03:14:56Z), then re-ran: **clean time-to-page = 103 s** (before the fix: never). Rule: *don't publish a confounded number; wait for clean windows* |
 
 ## Next
 - **Blind game days** (you): `scripts/gameday.sh start`, respond from alerts and runbooks only, write the postmortem from the template, add a row to the index.
-- GD1 AI-4 (clean time-to-detect) after ~03:15 UTC. Email-delivery SLI (P4-ISSUE-7). Kafka durability backlog (P4-ISSUE-8).
+- Email-delivery SLI (P4-ISSUE-7). Kafka durability (P4-ISSUE-8, scheduled for Phase 5). Blind game days.
