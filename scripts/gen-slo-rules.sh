@@ -19,7 +19,7 @@ mkdir -p "$RULES_DIR"
 rm -f "$RULES_DIR"/*.yaml
 
 echo "==> Generating rules with Sloth"
-docker run --rm -v "$PWD:/w" -w /w "$SLOTH_IMAGE" generate -i slos -o "$RULES_DIR" --no-log
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/w" -w /w "$SLOTH_IMAGE" generate -i slos -o "$RULES_DIR" --no-log
 
 echo "==> Validating rules with promtool"
 docker run --rm -v "$PWD/$RULES_DIR:/r" --entrypoint promtool "$PROM_IMAGE" \
