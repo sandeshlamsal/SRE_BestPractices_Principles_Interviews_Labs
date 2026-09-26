@@ -18,5 +18,6 @@ spec:
     - port: metrics
       interval: 15s
       relabelings:
-        - sourceLabels: [__meta_kubernetes_pod_node_name]
+        - action: replace          # explicit: the CRD defaults it, and Argo CD would show a permanent diff (P7-ISSUE)
+          sourceLabels: [__meta_kubernetes_pod_node_name]
           targetLabel: node
