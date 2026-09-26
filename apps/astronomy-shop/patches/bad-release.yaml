@@ -1,0 +1,14 @@
+# DELIBERATELY BAD RELEASE (Phase 7 canary test): wrong payment port. The canary must fail its SLO analysis
+# and roll back automatically. Reverted in the next commit.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout
+spec:
+  template:
+    spec:
+      containers:
+        - name: checkout
+          env:
+            - name: PAYMENT_ADDR
+              value: payment:9999
