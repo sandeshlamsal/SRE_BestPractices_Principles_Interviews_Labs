@@ -3,7 +3,7 @@
 # Needs: helm, python3 + pyyaml, docker, kubeconform.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-OUT="$(mktemp -d)"; trap 'rm -rf "$OUT"' EXIT
+OUT="$(mktemp -d)"; chmod 755 "$OUT"; trap 'rm -rf "$OUT"' EXIT
 step(){ echo; echo "==> $*"; }
 V(){ grep -E "^$1 *:=" Makefile | awk '{print $3}'; }
 
@@ -41,6 +41,7 @@ git diff --exit-code -- observability/prometheus/ && echo "   no drift"
 
 step "5/7 promtool: platform alert rules"
 python3 -c "import yaml;d=yaml.safe_load(open('observability/monitors/sre-lab-alerts.yaml'));yaml.safe_dump({'groups':d['spec']['groups']},open('$OUT/alerts.yaml','w'))"
+chmod 644 "$OUT/alerts.yaml"
 docker run --rm -v "$OUT:/r" --entrypoint promtool prom/prometheus:v3.14.0 check rules /r/alerts.yaml
 
 step "6/7 Alerting hygiene: runbooks + routing tests"

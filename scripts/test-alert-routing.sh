@@ -5,7 +5,7 @@
 # Requires only Docker.  Usage: scripts/test-alert-routing.sh   (or: make test-routing)
 set -euo pipefail
 cd "$(dirname "$0")/.."
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+WORK="$(mktemp -d)"; chmod 755 "$WORK"; trap 'rm -rf "$WORK"' EXIT
 IMAGE="prom/alertmanager:v0.28.1"
 
 python3 - observability/alerting/alertmanagerconfig.yaml "$WORK/alertmanager.yml" <<'PY'
