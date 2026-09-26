@@ -97,6 +97,7 @@ Write a postmortem in `postmortems/` for each one.
 **Interview:** deployment strategies, and how error budgets gate releases.
 
 ## Phase 8: Infrastructure as Code & cloud
+📘 **Execution guide:** [labs/phase-8-cloud-aks.md](labs/phase-8-cloud-aks.md): **Azure AKS** (owner's choice) via Terraform; same repo deployed unchanged; real node failure; ~$0.31/hr
 - [ ] Terraform an **EKS** cluster (3 nodes across 3 AZs, Karpenter, Spot workers; see [ADR-0002](adr/0002-cloud-provider.md)); optionally one comparison session on AKS; run `terraform destroy` after each session
 - [ ] Deploy the **same repo** there: the SLOs, alerts, dashboards, and runbooks move over unchanged
 - [ ] Run the cloud-only scenarios: AZ outage (AWS FIS), cluster-autoscaler lag, managed-dependency failover, large load test, IAM/quota failure
