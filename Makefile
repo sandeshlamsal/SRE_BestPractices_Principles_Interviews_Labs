@@ -31,6 +31,8 @@ deploy: ## Install/upgrade the Astronomy Shop
 	helm upgrade --install $(RELEASE) open-telemetry/opentelemetry-demo --version $(CHART_VERSION) \
 	  --namespace $(NAMESPACE) --create-namespace \
 	  -f apps/astronomy-shop/values.yaml \
+	  -f apps/astronomy-shop/values-resilience.yaml \
+	  --post-renderer scripts/helm-postrender.py \
 	  --wait --timeout 15m
 
 slo-rules: ## Generate + validate SLO rules from slos/ (Sloth + promtool) and apply as PrometheusRules
@@ -53,6 +55,9 @@ alerting-sink: ## Route ALL alerts to the in-cluster alert-sink (no credentials;
 
 test-routing: ## Unit-test Alertmanager routing (no credentials needed)
 	scripts/test-alert-routing.sh
+
+resilience: ## Apply PodDisruptionBudgets (Phase 5)
+	kubectl apply -f platform/resilience/pdbs.yaml
 
 chaos-up: ## Install Chaos Mesh (namespace-filtered: only astronomy-shop may be targeted)
 	helm repo add chaos-mesh https://charts.chaos-mesh.org >/dev/null 2>&1 || true

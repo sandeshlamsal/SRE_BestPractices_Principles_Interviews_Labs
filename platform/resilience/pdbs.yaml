@@ -1,0 +1,183 @@
+# PodDisruptionBudgets (Phase 5): voluntary disruptions (node drain, upgrades) must keep >= 1 replica serving.
+# The demo chart has no PDB support, so they live here. Apply: make resilience
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: checkout-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: checkout
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cart-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: cart
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: product-catalog-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: product-catalog
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: currency-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: currency
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: payment-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: payment
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: recommendation-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: recommendation
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ad-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: ad
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: shipping-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: shipping
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: quote-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: quote
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: email-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: email
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: frontend-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: frontend
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: frontend-proxy-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: frontend-proxy
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: image-provider-pdb
+  namespace: astronomy-shop
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: image-provider
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: alert-sink-pdb
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: sre-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alert-sink

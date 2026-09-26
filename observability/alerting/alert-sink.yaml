@@ -33,13 +33,27 @@ metadata:
   namespace: observability
   labels: { app.kubernetes.io/name: alert-sink, app.kubernetes.io/part-of: sre-lab }
 spec:
-  replicas: 1
+  # 2 replicas across nodes: in Exp 03 the pager died WITH the node it monitored, delaying pages ~3 min (P5-ISSUE-5).
+  replicas: 2
+  # REQUIRED anti-affinity + 2 nodes: the default rollout (maxSurge 1, maxUnavailable 0) would create a 3rd pod
+  # that fits nowhere -> stuck Pending forever. Replace one at a time instead (P5-ISSUE-10).
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: 0, maxUnavailable: 1 }
   selector:
     matchLabels: { app.kubernetes.io/name: alert-sink }
   template:
     metadata:
       labels: { app.kubernetes.io/name: alert-sink }
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:   # the pager must NEVER share a node with its other replica
+            - topologyKey: kubernetes.io/hostname
+              labelSelector: { matchLabels: { app.kubernetes.io/name: alert-sink } }
+      tolerations:
+        - { key: node.kubernetes.io/unreachable, operator: Exists, effect: NoExecute, tolerationSeconds: 30 }
+        - { key: node.kubernetes.io/not-ready, operator: Exists, effect: NoExecute, tolerationSeconds: 30 }
       containers:
         - name: sink
           image: python:3.12-alpine

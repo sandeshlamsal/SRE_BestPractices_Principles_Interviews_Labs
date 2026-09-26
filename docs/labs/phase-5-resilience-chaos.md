@@ -99,6 +99,34 @@ kubectl -n astronomy-shop exec deploy/astronomy-db -- psql -U postgres -d astron
 kubectl -n astronomy-shop exec deploy/astronomy-db -- psql -U postgres -tAc "select pg_postmaster_start_time()"
 ```
 
+## Step 4: Hardening, then re-run the same experiment
+
+| Change | Where | Finding it addresses |
+|---|---|---|
+| `replicas: 2` + preferred pod anti-affinity, 13 critical services | [values-resilience.yaml](../../apps/astronomy-shop/values-resilience.yaml) | P5-ISSUE-4 |
+| Unreachable/not-ready tolerations **30 s** (default 300 s) | same | P5-ISSUE-4 |
+| Readiness + liveness probes: **gRPC** for 7 services (verified `SERVING` with grpc-health-probe), TCP for 6 HTTP services | [postrender.yaml](../../apps/astronomy-shop/postrender.yaml) via [helm-postrender.py](../../scripts/helm-postrender.py) | ISSUE-6, P5-ISSUE-1 |
+| PodDisruptionBudgets `minAvailable: 1` | [pdbs.yaml](../../platform/resilience/pdbs.yaml) (`make resilience`) | voluntary disruptions |
+| Pager: 2 replicas, **required** anti-affinity, `maxSurge 0` | [alert-sink.yaml](../../observability/alerting/alert-sink.yaml) | P5-ISSUE-5 |
+
+Verified after `make deploy` (revision 8): **13/13 services with 2 ready replicas on different nodes**; pager on both nodes; PDBs allow 1.
+
+### Exp 03b: node failure again, AFTER hardening (04:08:16 UTC, 5 min)
+| | Before | **After** |
+|---|---|---|
+| Peak edge failures | **47%** | **3.1%** |
+| Error duration | ~8 min | **~2.5 min** (endpoint removal after NotReady), 0% from t+216 s |
+| New pages | Browse, Cart, Checkout | **none** |
+| Pods stranded | 10 for ~6 min | 1 (Loki/Tempo: node-pinned volume) |
+
+**Result: hypothesis confirmed.** Losing a node went from a SEV1-class outage to a blip.
+Caveat: 3 pages were still firing from Exp 03 (their windows hadn't cleared), so only *new* pages were judged.
+
+### Still open (next step)
+All stateful singletons (valkey-cart, flagd, Kafka, Postgres, accounting) now sit on `sre-lab-worker2`. **Losing that node
+would still cause the Exp 03 outage and data loss.** Next: Postgres and Kafka persistence (`strategy: Recreate` via the
+post-renderer), a replicated flagd, and a node-failure test on worker2.
+
 ---
 
 ## Issues log
@@ -112,3 +140,5 @@ kubectl -n astronomy-shop exec deploy/astronomy-db -- psql -U postgres -tAc "sel
 | **P5-ISSUE-6** | **Data loss** | Postgres rescheduled empty: ~17 h of `accounting.order` lost | No PVC on `astronomy-db` (chart default) | Persistent volume. On single-node-pinned local storage that trades durability for availability; the real answer is replicated/managed storage (Phase 8/9) |
 | P5-ISSUE-7 | Observability | Logs and traces lost for the outage window | Loki/Tempo single replica on node-local PVs can't reschedule | Accept locally; production: object storage + replicas |
 | P5-ISSUE-8 | Experiment safety | The abort (`docker start`) was inside a loop that could hang on `kubectl logs` for a dead node | Abort depended on the broken component | **Independent safety timer.** An abort must never depend on what you broke |
+| P5-ISSUE-9 | Chart | gRPC/TCP probes rejected: "additional properties 'grpc' not allowed" | The demo chart's values schema only allows `httpGet` probes | **Post-renderer** (keeps schema validation for everything else; `--skip-schema-validation` would disable it all) |
+| P5-ISSUE-10 | Rollout | Pager with 2 replicas + *required* anti-affinity on 2 nodes would deadlock | The default rollout surges a 3rd pod that fits nowhere | `maxSurge: 0, maxUnavailable: 1` |

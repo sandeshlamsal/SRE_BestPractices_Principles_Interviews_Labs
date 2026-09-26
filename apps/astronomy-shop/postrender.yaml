@@ -1,0 +1,188 @@
+# Post-render patches for the opentelemetry-demo chart, for things its values schema/templates can't express.
+# Applied by scripts/helm-postrender.py via `helm upgrade --post-renderer` (make deploy).
+#   probes : grpc (7 services VERIFIED to implement grpc.health.v1: SERVING) or tcpSocket (HTTP services).
+#            The chart schema only allows httpGet probes (P5-ISSUE-9).
+#   strategy: Recreate for single-writer stateful deployments (added in the stateful step).
+deployments:
+  checkout:
+    containers:
+      checkout:
+        readinessProbe:
+          grpc: &id001
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          grpc: *id001
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+  cart:
+    containers:
+      cart:
+        readinessProbe:
+          grpc: &id002
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          grpc: *id002
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+  product-catalog:
+    containers:
+      product-catalog:
+        readinessProbe:
+          grpc: &id003
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          grpc: *id003
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+  currency:
+    containers:
+      currency:
+        readinessProbe:
+          grpc: &id004
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          grpc: *id004
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+  payment:
+    containers:
+      payment:
+        readinessProbe:
+          grpc: &id005
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          grpc: *id005
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+  recommendation:
+    containers:
+      recommendation:
+        readinessProbe:
+          grpc: &id006
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          grpc: *id006
+          initialDelaySeconds: 45
+          periodSeconds: 10
+          failureThreshold: 6
+  ad:
+    containers:
+      ad:
+        readinessProbe:
+          grpc: &id007
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          grpc: *id007
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          failureThreshold: 6
+  shipping:
+    containers:
+      shipping:
+        readinessProbe:
+          tcpSocket: &id008
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          tcpSocket: *id008
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+  quote:
+    containers:
+      quote:
+        readinessProbe:
+          tcpSocket: &id009
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          tcpSocket: *id009
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+  email:
+    containers:
+      email:
+        readinessProbe:
+          tcpSocket: &id010
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          tcpSocket: *id010
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+  frontend:
+    containers:
+      frontend:
+        readinessProbe:
+          tcpSocket: &id011
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          tcpSocket: *id011
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+  frontend-proxy:
+    containers:
+      frontend-proxy:
+        readinessProbe:
+          tcpSocket: &id012
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          tcpSocket: *id012
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+  image-provider:
+    containers:
+      image-provider:
+        readinessProbe:
+          tcpSocket: &id013
+            port: 8081
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          failureThreshold: 2
+        livenessProbe:
+          tcpSocket: *id013
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6

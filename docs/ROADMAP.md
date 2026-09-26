@@ -73,6 +73,7 @@ Write a postmortem in `postmortems/` for each one.
 **Interview:** "Tell me about an incident you handled." You'll have real ones to talk about.
 
 ## Phase 5: Chaos engineering & resilience
+📘 **Execution guide:** [labs/phase-5-resilience-chaos.md](labs/phase-5-resilience-chaos.md). Node failure: **47% → 3.1% errors**, 8 min → 2.5 min; stateful hardening next
 - [ ] Install **Chaos Mesh**
 - [ ] Experiments with a hypothesis: pod kill, node drain, network latency and packet loss, DNS failure
 - [ ] Add PodDisruptionBudgets, readiness and liveness probes, resource requests and limits, HPA, and retries with timeouts where they're missing
