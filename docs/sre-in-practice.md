@@ -164,7 +164,9 @@ The same honesty applies to "fixed" claims: P2-ISSUE-10 was re-opened when the e
 | Alerting & on-call routing | ✅ end to end via alert sink; ⏳ real PagerDuty/Slack | Phase 3 |
 | Toil & automation | ✅ ongoing | all phases |
 | Incident management & postmortems | 🔄 GD1 done: blameless postmortem, 6 action items, 3 done | Phase 4 |
-| Chaos & resilience | partial (thrashing, readiness, Loki ring found) | Phase 5 |
-| Capacity | partial (sized from measurement) | Phase 6 |
-| Release engineering / GitOps | partial (pinning, drift) | Phase 7 |
-| IaC / cloud / DR | not yet | Phases 8–9 |
+| Chaos & resilience | ✅ node loss 47% → 3.1% errors; stateful HA still open | Phase 5 |
+| Capacity | ✅ knee ~58 req/s, bottleneck found by one trace | Phase 6 |
+| Release engineering / GitOps | ✅ CI, Argo CD self-heal, SLO-gated canary auto-rollback | Phase 7 |
+| IaC / cloud | ✅ AKS via Terraform, same repo deployed unchanged | Phase 8 |
+| Disaster recovery | ✅ tested: RTO 142 s, RPO 1 order (targets 15 min) | Phase 9 |
+| Production readiness review | ✅ 10 ready / 4 partial / 5 not ready, with a top-5 action plan | Phase 9 |

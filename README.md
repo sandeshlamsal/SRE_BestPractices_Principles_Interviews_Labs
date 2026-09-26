@@ -28,7 +28,7 @@ make open         # http://localhost:8080
 | 3 Alerting & on-call | ✅ done (real PagerDuty/Slack pending credentials) |
 | 4 Incident game days | ✅ (your blind game day pending) |
 | 5 Resilience · 6 Capacity · 7 GitOps/CI/canary · 8 Cloud (AKS) | ✅ |
-| 9 DR + production readiness review | ⏭️ next (capstone) |
+| 9 DR + production readiness review | ✅ (RTO 142 s, RPO 1 order; PRR scorecard) |
 
 Highlights: an SLI that was blind to a 50% outage, found and fixed; memory-limit thrashing with zero OOM kills;
 and a root cause we got **wrong** and corrected in the open ([sre-in-practice.md](docs/sre-in-practice.md)).

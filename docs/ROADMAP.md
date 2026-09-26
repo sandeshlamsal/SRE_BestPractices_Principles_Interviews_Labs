@@ -106,6 +106,7 @@ Write a postmortem in `postmortems/` for each one.
 See [lab-matrix.md](lab-matrix.md) for what each phase covers locally vs in the cloud.
 
 ## Phase 9: Disaster recovery & production readiness (capstone)
+📘 **Execution guide:** [labs/phase-9-dr-prr.md](labs/phase-9-dr-prr.md): DR drill **RTO 142 s / RPO 1 order** (targets 15 min); PRR verdict: strong operating model, stateful HA and overload are the gaps
 - [ ] Define **RPO/RTO** for stateful parts (cart in Valkey, Kafka orders, any database)
 - [ ] Back up and **test a restore** with Velero (local: to MinIO; cloud: to S3/GCS). An untested backup doesn't count
 - [ ] DR drill: delete the whole namespace (local) or cluster (cloud) and rebuild from Git and backups, timing it against the RTO
