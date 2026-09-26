@@ -1,0 +1,55 @@
+# Phase 9 DR: logical backups of the shop's Postgres (astronomy-db) every 15 min -> RPO target 15 min.
+# Backups live in a SEPARATE namespace + PVC, so losing the astronomy-shop namespace doesn't lose them.
+# Limitation (lab): same cluster, node-local PV. Production: off-site object storage in another region, and backups encrypted.
+# Password: Secret `pg-backup` (make backup-secret), never in Git.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: backups
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pg-backups
+  namespace: backups
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pg-backup
+  namespace: backups
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: pg-dump
+              image: postgres:18.4           # same major as the server (pg_dump must be >= server version)
+              envFrom: [{ secretRef: { name: pg-backup } }]
+              command: ["sh", "-c"]
+              args:
+                - |
+                  set -e
+                  f=/backups/astronomy_db-$(date -u +%Y%m%dT%H%M%SZ).dump
+                  pg_dump -h astronomy-db.astronomy-shop -U postgres -d astronomy_db -Fc -f "$f.tmp" && mv "$f.tmp" "$f"
+                  echo "backup ok: $f $(du -h "$f" | cut -f1) orders=$(psql -h astronomy-db.astronomy-shop -U postgres -d astronomy_db -tAc 'select count(*) from accounting.order')"
+                  ls -1t /backups/*.dump | tail -n +11 | xargs -r rm -f     # keep the newest 10
+              resources:
+                requests: { cpu: 50m, memory: 64Mi }
+                limits: { memory: 256Mi }
+              volumeMounts: [{ name: backups, mountPath: /backups }]
+          volumes:
+            - name: backups
+              persistentVolumeClaim: { claimName: pg-backups }

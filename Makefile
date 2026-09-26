@@ -97,6 +97,16 @@ aks-cost: ## Month-to-date cost of the lab resource group
 ci: ## Run all CI checks locally (same script as GitHub Actions)
 	scripts/ci.sh
 
+backup-secret: ## Create the pg-backup Secret (the demo chart's default DB password; never committed)
+	kubectl create namespace backups --dry-run=client -o yaml | kubectl apply -f -
+	@kubectl -n backups get secret pg-backup >/dev/null 2>&1 || kubectl -n backups create secret generic pg-backup --from-literal=PGPASSWORD=changeit
+
+backup-now: ## Run a Postgres backup immediately (from the CronJob template)
+	kubectl -n backups create job --from=cronjob/pg-backup pg-backup-manual-$$(date +%s)
+
+db-restore: ## Restore Postgres from the newest backup (scripts/db-restore.sh)
+	scripts/db-restore.sh
+
 resilience: ## Apply PodDisruptionBudgets (Phase 5)
 	kubectl apply -f platform/resilience/pdbs.yaml
 

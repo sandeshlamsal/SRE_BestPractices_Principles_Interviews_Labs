@@ -12,7 +12,7 @@ spec:
     path: .
     directory:
       recurse: true
-      include: '{observability/monitors/*.yaml,observability/alerting/*.yaml,observability/prometheus/slo-prometheusrules.yaml,platform/resilience/*.yaml}'
+      include: '{observability/monitors/*.yaml,observability/alerting/*.yaml,observability/prometheus/slo-prometheusrules.yaml,platform/resilience/*.yaml,platform/backup/*.yaml}'
   destination: { server: https://kubernetes.default.svc, namespace: observability }
   syncPolicy:
     automated: { prune: true, selfHeal: true }
