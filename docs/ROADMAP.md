@@ -82,6 +82,7 @@ Write a postmortem in `postmortems/` for each one.
 **Interview:** cascading failures, retries vs retry storms, circuit breakers, graceful degradation.
 
 ## Phase 6: Capacity & performance
+📘 **Execution guide:** [labs/phase-6-capacity.md](labs/phase-6-capacity.md): knee **~58 req/s**; bottleneck = product-catalog DB pool starvation (found via one trace)
 - [ ] Load test with **k6** (Locust keeps running as background traffic); find the saturation point of the checkout path
 - [ ] Tune HPAs from the results and write a capacity plan
 

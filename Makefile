@@ -56,6 +56,11 @@ alerting-sink: ## Route ALL alerts to the in-cluster alert-sink (no credentials;
 test-routing: ## Unit-test Alertmanager routing (no credentials needed)
 	scripts/test-alert-routing.sh
 
+loadtest: ## Run the k6 capacity test in-cluster (Phase 6); follow with: kubectl -n astronomy-shop logs -f job/k6-capacity
+	kubectl -n $(NAMESPACE) delete job k6-capacity --ignore-not-found
+	kubectl -n $(NAMESPACE) create configmap k6-scripts --from-file=loadtests/checkout-journey.js --dry-run=client -o yaml | kubectl apply -f -
+	kubectl apply -f loadtests/k6-job.yaml
+
 resilience: ## Apply PodDisruptionBudgets (Phase 5)
 	kubectl apply -f platform/resilience/pdbs.yaml
 
