@@ -1,0 +1,23 @@
+# CI for the SRE lab: the same checks as `make ci`, on every push and PR.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v5.0.1
+        with:
+          version: v3.21.2
+      - name: Install kubeconform + pyyaml
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz | sudo tar -xz -C /usr/local/bin kubeconform
+          python3 -m pip install --quiet pyyaml
+      - name: Run CI checks (scripts/ci.sh)
+        run: scripts/ci.sh

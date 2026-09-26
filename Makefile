@@ -61,6 +61,9 @@ loadtest: ## Run the k6 capacity test in-cluster (Phase 6); follow with: kubectl
 	kubectl -n $(NAMESPACE) create configmap k6-scripts --from-file=loadtests/checkout-journey.js --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -f loadtests/k6-job.yaml
 
+ci: ## Run all CI checks locally (same script as GitHub Actions)
+	scripts/ci.sh
+
 resilience: ## Apply PodDisruptionBudgets (Phase 5)
 	kubectl apply -f platform/resilience/pdbs.yaml
 
