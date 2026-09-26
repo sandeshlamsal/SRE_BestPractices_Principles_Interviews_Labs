@@ -89,9 +89,10 @@ Write a postmortem in `postmortems/` for each one.
 **Interview:** Little's Law, headroom, and forecasting.
 
 ## Phase 7: Release engineering & GitOps
-- [ ] Manage all manifests with **Argo CD**
+📘 **Execution guide:** [labs/phase-7-gitops.md](labs/phase-7-gitops.md): CI green; Argo CD owns the shop + SRE config (self-heal in 2 s); canary next
+- [x] Manage all manifests with **Argo CD**
 - [ ] **Argo Rollouts** canary with automated analysis on SLIs; roll back automatically on budget burn
-- [ ] CI with GitHub Actions: lint, kubeconform, and policy checks
+- [x] CI with GitHub Actions: render, kubeconform, promtool, runbook/routing tests, drift and link checks
 
 **Interview:** deployment strategies, and how error budgets gate releases.
 
