@@ -1,0 +1,12 @@
+# The shop, rendered by Kustomize (Helm chart + our values + probe patches). Git is the source of truth:
+# selfHeal reverts manual kubectl changes (the drift class of P3-ISSUE-8).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: { name: astronomy-shop, namespace: argocd }
+spec:
+  project: default
+  source: { repoURL: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs, targetRevision: main, path: apps/astronomy-shop }
+  destination: { server: https://kubernetes.default.svc, namespace: astronomy-shop }
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [ServerSideApply=true, CreateNamespace=true]

@@ -1,0 +1,17 @@
+# The ONE render path for the Astronomy Shop: local (make render / make deploy), CI and Argo CD.
+# Kustomize inflates the Helm chart with our values, then applies standard patches for what the chart
+# can't express. This replaced the Helm post-renderer because Argo CD doesn't support post-renderers (Phase 7).
+#   kubectl kustomize --enable-helm apps/astronomy-shop
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+helmCharts:
+  - name: opentelemetry-demo
+    repo: https://open-telemetry.github.io/opentelemetry-helm-charts
+    version: 0.42.0                 # keep in sync with Makefile CHART_VERSION (CI checks)
+    releaseName: shop
+    namespace: astronomy-shop
+    valuesFile: values.yaml
+    additionalValuesFiles:
+      - values-resilience.yaml
+patches:
+  - path: patches/probes.yaml

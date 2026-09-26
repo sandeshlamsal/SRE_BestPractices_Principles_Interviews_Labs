@@ -105,7 +105,7 @@ kubectl -n astronomy-shop exec deploy/astronomy-db -- psql -U postgres -tAc "sel
 |---|---|---|
 | `replicas: 2` + preferred pod anti-affinity, 13 critical services | [values-resilience.yaml](../../apps/astronomy-shop/values-resilience.yaml) | P5-ISSUE-4 |
 | Unreachable/not-ready tolerations **30 s** (default 300 s) | same | P5-ISSUE-4 |
-| Readiness + liveness probes: **gRPC** for 7 services (verified `SERVING` with grpc-health-probe), TCP for 6 HTTP services | [postrender.yaml](../../apps/astronomy-shop/postrender.yaml) via [helm-postrender.py](../../scripts/helm-postrender.py) | ISSUE-6, P5-ISSUE-1 |
+| Readiness + liveness probes: **gRPC** for 7 services (verified `SERVING` with grpc-health-probe), TCP for 6 HTTP services | [patches/probes.yaml](../../apps/astronomy-shop/patches/probes.yaml) (Kustomize; the Phase 5 post-renderer was retired in Phase 7) | ISSUE-6, P5-ISSUE-1 |
 | PodDisruptionBudgets `minAvailable: 1` | [pdbs.yaml](../../platform/resilience/pdbs.yaml) (`make resilience`) | voluntary disruptions |
 | Pager: 2 replicas, **required** anti-affinity, `maxSurge 0` | [alert-sink.yaml](../../observability/alerting/alert-sink.yaml) | P5-ISSUE-5 |
 

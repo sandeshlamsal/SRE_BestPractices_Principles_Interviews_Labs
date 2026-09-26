@@ -1,0 +1,11 @@
+# Argo CD (chart pinned in Makefile: ARGOCD_VERSION). Namespace: argocd. Phase 7.
+configs:
+  cm:
+    # The shop renders via Kustomize + Helm inflation (apps/astronomy-shop/kustomization.yaml)
+    kustomize.buildOptions: --enable-helm
+    timeout.reconciliation: 60s          # poll Git every 60 s (no webhook from a laptop cluster)
+  params:
+    server.insecure: true                # lab: accessed via port-forward only
+dex: { enabled: false }
+notifications: { enabled: false }
+applicationSet: { enabled: false }

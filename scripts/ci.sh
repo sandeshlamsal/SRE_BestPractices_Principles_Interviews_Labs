@@ -15,9 +15,10 @@ helm repo add chaos-mesh https://charts.chaos-mesh.org >/dev/null 2>&1 || true
 helm repo update >/dev/null
 
 step "2/7 Render every chart with our values (catches schema errors, bad values, post-renderer failures)"
-helm template shop open-telemetry/opentelemetry-demo --version "$(V CHART_VERSION)" -n astronomy-shop \
-  -f apps/astronomy-shop/values.yaml -f apps/astronomy-shop/values-resilience.yaml \
-  --post-renderer scripts/helm-postrender.py > "$OUT/shop.yaml"
+# The shop renders through Kustomize (helm inflation + patches): the SAME path Argo CD uses.
+KV=$(python3 -c "import yaml;print(yaml.safe_load(open('apps/astronomy-shop/kustomization.yaml'))['helmCharts'][0]['version'])")
+[ "$KV" = "$(V CHART_VERSION)" ] || { echo "chart version drift: kustomization=$KV Makefile=$(V CHART_VERSION)"; exit 1; }
+kubectl kustomize --enable-helm apps/astronomy-shop > "$OUT/shop.yaml"
 helm template kps prometheus-community/kube-prometheus-stack --version "$(V KPS_VERSION)" -n observability \
   -f observability/kube-prometheus-stack/values.yaml > "$OUT/kps.yaml"
 helm template tempo grafana-community/tempo --version "$(V TEMPO_VERSION)" -n observability -f observability/tempo/values.yaml > "$OUT/tempo.yaml"
@@ -31,7 +32,7 @@ kubeconform -strict -summary -kubernetes-version 1.35.0 \
   -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
   -skip CustomResourceDefinition \
   "$OUT"/*.yaml observability/monitors observability/alerting observability/prometheus/slo-prometheusrules.yaml \
-  platform/resilience loadtests/k6-job.yaml
+  platform/resilience loadtests/k6-job.yaml gitops/apps
 # Chaos Mesh CRDs are not in the public schema catalog -> structure-only check (known gap; fix: vendor schemas from the CRDs)
 kubeconform -summary -ignore-missing-schemas chaos/*.yaml
 

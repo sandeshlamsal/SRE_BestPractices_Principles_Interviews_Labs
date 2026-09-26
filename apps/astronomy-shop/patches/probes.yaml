@@ -1,12 +1,14 @@
-# Post-render patches for the opentelemetry-demo chart, for things its values schema/templates can't express.
-# Applied by scripts/helm-postrender.py via `helm upgrade --post-renderer` (make deploy).
-#   probes : grpc (7 services VERIFIED to implement grpc.health.v1: SERVING) or tcpSocket (HTTP services).
-#            The chart schema only allows httpGet probes (P5-ISSUE-9).
-#   strategy: Recreate for single-writer stateful deployments (added in the stateful step).
-deployments:
-  checkout:
-    containers:
-      checkout:
+# Strategic-merge patches: gRPC/TCP probes (the chart schema only allows httpGet, P5-ISSUE-9).
+# gRPC health VERIFIED (grpc-health-probe SERVING) for checkout, cart, product-catalog, currency, payment, recommendation, ad.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout
+spec:
+  template:
+    spec:
+      containers:
+      - name: checkout
         readinessProbe:
           grpc: &id001
             port: 8080
@@ -18,171 +20,255 @@ deployments:
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6
-  cart:
-    containers:
-      cart:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+spec:
+  template:
+    spec:
+      containers:
+      - name: cart
         readinessProbe:
-          grpc: &id002
+          grpc: &id001
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          grpc: *id002
+          grpc: *id001
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6
-  product-catalog:
-    containers:
-      product-catalog:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-catalog
+spec:
+  template:
+    spec:
+      containers:
+      - name: product-catalog
         readinessProbe:
-          grpc: &id003
+          grpc: &id001
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          grpc: *id003
+          grpc: *id001
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6
-  currency:
-    containers:
-      currency:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currency
+spec:
+  template:
+    spec:
+      containers:
+      - name: currency
         readinessProbe:
-          grpc: &id004
+          grpc: &id001
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          grpc: *id004
+          grpc: *id001
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6
-  payment:
-    containers:
-      payment:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment
+spec:
+  template:
+    spec:
+      containers:
+      - name: payment
         readinessProbe:
-          grpc: &id005
+          grpc: &id001
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          grpc: *id005
+          grpc: *id001
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6
-  recommendation:
-    containers:
-      recommendation:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation
+spec:
+  template:
+    spec:
+      containers:
+      - name: recommendation
         readinessProbe:
-          grpc: &id006
+          grpc: &id001
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          grpc: *id006
+          grpc: *id001
           initialDelaySeconds: 45
           periodSeconds: 10
           failureThreshold: 6
-  ad:
-    containers:
-      ad:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ad
+spec:
+  template:
+    spec:
+      containers:
+      - name: ad
         readinessProbe:
-          grpc: &id007
+          grpc: &id001
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          grpc: *id007
+          grpc: *id001
           initialDelaySeconds: 60
           periodSeconds: 10
           failureThreshold: 6
-  shipping:
-    containers:
-      shipping:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipping
+spec:
+  template:
+    spec:
+      containers:
+      - name: shipping
         readinessProbe:
-          tcpSocket: &id008
+          tcpSocket: &id001
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          tcpSocket: *id008
+          tcpSocket: *id001
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6
-  quote:
-    containers:
-      quote:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quote
+spec:
+  template:
+    spec:
+      containers:
+      - name: quote
         readinessProbe:
-          tcpSocket: &id009
+          tcpSocket: &id001
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          tcpSocket: *id009
+          tcpSocket: *id001
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6
-  email:
-    containers:
-      email:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email
+spec:
+  template:
+    spec:
+      containers:
+      - name: email
         readinessProbe:
-          tcpSocket: &id010
+          tcpSocket: &id001
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          tcpSocket: *id010
+          tcpSocket: *id001
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6
-  frontend:
-    containers:
-      frontend:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  template:
+    spec:
+      containers:
+      - name: frontend
         readinessProbe:
-          tcpSocket: &id011
+          tcpSocket: &id001
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          tcpSocket: *id011
+          tcpSocket: *id001
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6
-  frontend-proxy:
-    containers:
-      frontend-proxy:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-proxy
+spec:
+  template:
+    spec:
+      containers:
+      - name: frontend-proxy
         readinessProbe:
-          tcpSocket: &id012
+          tcpSocket: &id001
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          tcpSocket: *id012
+          tcpSocket: *id001
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6
-  image-provider:
-    containers:
-      image-provider:
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-provider
+spec:
+  template:
+    spec:
+      containers:
+      - name: image-provider
         readinessProbe:
-          tcpSocket: &id013
+          tcpSocket: &id001
             port: 8081
           initialDelaySeconds: 3
           periodSeconds: 5
           failureThreshold: 2
         livenessProbe:
-          tcpSocket: *id013
+          tcpSocket: *id001
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6

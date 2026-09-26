@@ -3,6 +3,7 @@
 import glob, os, re, sys
 bad = []
 for f in glob.glob("**/*.md", recursive=True):
+    if "/charts/" in f: continue   # vendored Helm charts (kustomize cache), not ours
     for link in re.findall(r"\]\(([^)#]+?)(?:#[^)]*)?\)", open(f).read()):
         if link.startswith(("http://", "https://", "mailto:")): continue
         if not os.path.exists(os.path.normpath(os.path.join(os.path.dirname(f), link))): bad.append(f"{f}: {link}")

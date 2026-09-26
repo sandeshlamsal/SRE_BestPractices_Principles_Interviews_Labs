@@ -2,7 +2,7 @@
 # Every setting maps to a measured finding (docs/labs/phase-5-resilience-chaos.md):
 #   replicas: 2 + pod anti-affinity (preferred, per node) -> survive losing one node   (P5-ISSUE-4: 1 node = ~45% failures, 8 min)
 #   probes: NOT here; the chart schema only allows httpGet probes, so grpc/tcp probes are injected by the
-#           post-renderer (scripts/helm-postrender.py + apps/astronomy-shop/postrender.yaml)   (P5-ISSUE-9)
+#           Kustomize patches (apps/astronomy-shop/patches/probes.yaml; post-renderer retired in Phase 7)   (P5-ISSUE-9)
 #   tolerations unreachable/not-ready 30 s (default 300 s)  -> evict from a dead node in ~70 s, not ~6 min
 # Anti-affinity is PREFERRED, not required: with 2 nodes, "required" would leave replicas Pending during a node loss.
 components:

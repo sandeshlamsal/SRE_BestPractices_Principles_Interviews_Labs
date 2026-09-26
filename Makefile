@@ -10,6 +10,7 @@ KPS_VERSION   := 91.5.2
 TEMPO_VERSION := 3.0.0
 LOKI_VERSION  := 18.13.5
 CHAOS_MESH_VERSION := 2.8.4
+ARGOCD_VERSION := 10.9.2
 
 # Observability stack (Phase 2)
 .PHONY: obs-secrets obs-up obs-down grafana-password chaos-up
@@ -25,15 +26,12 @@ cluster-up: ## Create the local kind cluster
 cluster-down: ## Delete the local kind cluster
 	kind delete cluster --name $(CLUSTER)
 
-deploy: ## Install/upgrade the Astronomy Shop
+deploy: ## Bootstrap/fallback render+apply of the shop (normally Argo CD does this)
 	helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts >/dev/null 2>&1 || true
 	helm repo update open-telemetry
-	helm upgrade --install $(RELEASE) open-telemetry/opentelemetry-demo --version $(CHART_VERSION) \
-	  --namespace $(NAMESPACE) --create-namespace \
-	  -f apps/astronomy-shop/values.yaml \
-	  -f apps/astronomy-shop/values-resilience.yaml \
-	  --post-renderer scripts/helm-postrender.py \
-	  --wait --timeout 15m
+	@echo "NOTE: since Phase 7 Argo CD syncs the shop from Git (make argocd-up). This target is the BOOTSTRAP/fallback path."
+	kubectl create namespace $(NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
+	kubectl kustomize --enable-helm apps/astronomy-shop | kubectl apply -n $(NAMESPACE) --server-side --force-conflicts -f -
 
 slo-rules: ## Generate + validate SLO rules from slos/ (Sloth + promtool) and apply as PrometheusRules
 	scripts/gen-slo-rules.sh
@@ -61,6 +59,16 @@ loadtest: ## Run the k6 capacity test in-cluster (Phase 6); follow with: kubectl
 	kubectl -n $(NAMESPACE) create configmap k6-scripts --from-file=loadtests/checkout-journey.js --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -f loadtests/k6-job.yaml
 
+argocd-up: ## Install Argo CD and register the GitOps Applications (gitops/apps/)
+	helm repo add argo https://argoproj.github.io/argo-helm >/dev/null 2>&1 || true
+	helm repo update argo
+	helm upgrade --install argocd argo/argo-cd --version $(ARGOCD_VERSION) -n argocd --create-namespace \
+	  -f platform/argocd/values.yaml --wait --timeout 10m
+	kubectl apply -f gitops/apps/
+
+argocd-status: ## Show Argo CD application sync/health
+	kubectl -n argocd get applications
+
 ci: ## Run all CI checks locally (same script as GitHub Actions)
 	scripts/ci.sh
 
@@ -78,10 +86,7 @@ check-runbooks: ## Verify every alert rule in the repo has a runbook that exists
 	scripts/check-runbooks.sh
 
 dashboards: ## Load Grafana dashboards from observability/dashboards/ (sidecar picks up label grafana_dashboard=1)
-	kubectl create configmap sre-lab-dashboards -n $(OBS_NS) \
-	  --from-file=observability/dashboards/ --dry-run=client -o yaml \
-	| kubectl label --local -f - grafana_dashboard=1 -o yaml \
-	| kubectl apply -f -
+	kubectl apply -k observability/dashboards
 
 undeploy: ## Remove the Astronomy Shop
 	helm uninstall $(RELEASE) -n $(NAMESPACE)

@@ -1,0 +1,19 @@
+# SRE config as code: platform alerts, generated SLO PrometheusRules, Alertmanager routing + alert-sink,
+# collector PodMonitor, PodDisruptionBudgets. (Raw rule groups in observability/prometheus/rules/ are NOT
+# Kubernetes objects and are excluded.)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: { name: sre-lab-config, namespace: argocd }
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/sandeshlamsal/SRE_BestPractices_Principles_Interviews_Labs
+    targetRevision: main
+    path: .
+    directory:
+      recurse: true
+      include: '{observability/monitors/*.yaml,observability/alerting/*.yaml,observability/prometheus/slo-prometheusrules.yaml,platform/resilience/*.yaml}'
+  destination: { server: https://kubernetes.default.svc, namespace: observability }
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [ServerSideApply=true]

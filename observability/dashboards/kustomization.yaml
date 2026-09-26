@@ -1,0 +1,10 @@
+# Dashboards as code -> one ConfigMap the Grafana sidecar loads (label grafana_dashboard=1). Synced by Argo CD.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: observability
+generatorOptions:
+  disableNameSuffixHash: true
+  labels: { grafana_dashboard: "1" }
+configMapGenerator:
+  - name: sre-lab-dashboards
+    files: [slo-overview.json, service-red.json, telemetry-pipeline.json]

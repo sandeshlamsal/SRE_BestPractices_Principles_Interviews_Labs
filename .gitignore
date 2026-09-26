@@ -9,3 +9,6 @@ kubeconfig*
 .vscode/
 tmp/
 incidents/.gameday/
+
+# Kustomize helm-inflation cache (kubectl kustomize --enable-helm downloads the chart here)
+apps/*/charts/
