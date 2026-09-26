@@ -6,6 +6,20 @@ loki:
   auth_enabled: false                   # single tenant lab
   commonConfig:
     replication_factor: 1
+  # P2-ISSUE-22 (happened twice): after a VM pause > 1 min (host sleep), the single Loki instance missed its
+  # own ring heartbeat, auto-forgot itself, and rejected all logs (503) until restarted. Tolerate short pauses.
+  # Production answer: >= 3 replicas, not a longer timeout.
+  structuredConfig:
+    ingester:
+      lifecycler:
+        ring:
+          heartbeat_timeout: 10m
+    distributor:
+      ring:
+        heartbeat_timeout: 10m
+    compactor:
+      compactor_ring:
+        heartbeat_timeout: 10m
   storage:
     type: filesystem
   schemaConfig:
