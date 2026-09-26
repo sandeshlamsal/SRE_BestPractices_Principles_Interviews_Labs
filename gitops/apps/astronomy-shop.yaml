@@ -17,3 +17,8 @@ spec:
   syncPolicy:
     automated: { prune: true, selfHeal: true }
     syncOptions: [ServerSideApply=true, CreateNamespace=true, RespectIgnoreDifferences=true]
+    # Phase 9 DR drill: the namespace was rebuilt WITHOUT the Chaos Mesh opt-in annotation, which had been added by hand
+    # (`kubectl annotate` in make chaos-up). Anything not in Git is lost in a disaster, so it's declared here.
+    managedNamespaceMetadata:
+      annotations:
+        chaos-mesh.org/inject: enabled
