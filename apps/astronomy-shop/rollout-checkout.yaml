@@ -1,8 +1,11 @@
 # Canary releases for checkout (Phase 7). The Rollout REFERENCES the chart's Deployment (workloadRef) and
 # progressively scales it down as canary/stable pods become ready (zero-downtime migration).
 # A change to the Deployment's pod template in Git -> Argo CD syncs -> the Rollout runs a canary:
-#   50% (1 of 2 pods) -> 2 min soak -> SLO analysis (checkout errors < 5%) -> 100%.  Failed analysis = automatic rollback.
-# Limitation: no service mesh, so the traffic split = replica ratio, and the SLI is the whole checkout (not per version).
+#   BACKGROUND SLO analysis runs from the first step THROUGH a 3-min post-100% soak; failure = abort = stable scaled back up.
+# Why background + post-100% soak (P7-ISSUE-7): the frontend talks gRPC to checkout over long-lived HTTP/2 connections,
+# and Service load balancing is per CONNECTION. A "50% canary" pod received ~0% of requests; traffic only moved when the
+# stable pods terminated, AFTER a pre-promotion analysis had already passed. The first bad release was promoted this way.
+# Proper fix (future): per-request L7 splitting (service mesh / Rollouts trafficRouting) + a per-version SLI.
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
@@ -20,13 +23,15 @@ spec:
     scaleDown: progressively
   strategy:
     canary:
+      analysis:                                   # background: evaluated continuously until the rollout completes
+        templates:
+          - templateName: checkout-slo
+        startingStep: 1
       steps:
         - setWeight: 50
-        - pause: { duration: 2m }                 # soak: span metrics flush every ~60 s
-        - analysis:
-            templates:
-              - templateName: checkout-slo
-        - setWeight: 100
+        - pause: { duration: 2m }
+        - setWeight: 100                          # stable pods terminate -> gRPC connections move -> real traffic
+        - pause: { duration: 3m }                 # post-promotion soak: still abortable (automatic rollback)
 ---
 # SLO-based release gate: the same SLI as the checkout-availability SLO (HTTP 5xx or 422 = bad).
 apiVersion: argoproj.io/v1alpha1
@@ -36,9 +41,8 @@ metadata:
 spec:
   metrics:
     - name: checkout-error-ratio
-      interval: 60s
-      count: 3
-      failureLimit: 1
+      interval: 30s
+      failureLimit: 1                             # 2 consecutive bad measurements (~1 min) abort
       successCondition: result[0] < 0.05
       provider:
         prometheus:
