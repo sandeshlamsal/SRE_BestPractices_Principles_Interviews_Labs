@@ -12,3 +12,10 @@ incidents/.gameday/
 
 # Kustomize helm-inflation cache (kubectl kustomize --enable-helm downloads the chart here)
 apps/*/charts/
+
+# Terraform (Phase 8)
+infra/**/.terraform/
+infra/**/terraform.tfvars
+infra/**/*.tfstate*
+infra/**/.terraform.lock.hcl.bak
+*.tfplan

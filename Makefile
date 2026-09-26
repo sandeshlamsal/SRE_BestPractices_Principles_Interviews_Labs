@@ -77,6 +77,23 @@ rollout-status: ## Show the checkout canary Rollout
 argocd-status: ## Show Argo CD application sync/health
 	kubectl -n argocd get applications
 
+# ---- Phase 8: Azure AKS (costs money: ~$0.30/hr; ALWAYS `make aks-down` after a session) ----
+AKS_DIR := infra/azure
+aks-plan: ## Terraform plan for AKS (needs infra/azure/terraform.tfvars)
+	cd $(AKS_DIR) && terraform init -input=false >/dev/null && terraform plan -input=false -out=plan.tfplan
+
+aks-up: aks-plan ## Create the AKS cluster (budget alert first) and fetch credentials as context sre-lab-aks
+	cd $(AKS_DIR) && terraform apply -input=false plan.tfplan
+	az aks get-credentials -g sre-lab-rg -n sre-lab-aks --context sre-lab-aks --overwrite-existing
+
+aks-down: ## DESTROY the AKS cluster and everything in the lab resource group
+	cd $(AKS_DIR) && terraform destroy -input=false -auto-approve
+	-kubectl config delete-context sre-lab-aks
+
+aks-cost: ## Month-to-date cost of the lab resource group
+	@az rest --method post --url "https://management.azure.com/subscriptions/$$(az account show --query id -o tsv)/resourceGroups/sre-lab-rg/providers/Microsoft.CostManagement/query?api-version=2023-11-01" \
+	  --body '{"type":"ActualCost","timeframe":"MonthToDate","dataset":{"granularity":"None","aggregation":{"totalCost":{"name":"Cost","function":"Sum"}}}}' --query "properties.rows" -o tsv
+
 ci: ## Run all CI checks locally (same script as GitHub Actions)
 	scripts/ci.sh
 
