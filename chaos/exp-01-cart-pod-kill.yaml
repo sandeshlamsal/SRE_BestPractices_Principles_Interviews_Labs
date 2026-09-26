@@ -1,0 +1,18 @@
+# Experiment 01: kill the cart pod.   Run: kubectl apply -f chaos/exp-01-cart-pod-kill.yaml
+# Steady state : cart-availability SLI ~0 errors; add-to-cart succeeding.
+# Hypothesis   : BEFORE hardening (1 replica, no readiness probe) add-to-cart fails until the new pod is up.
+#                AFTER hardening (2 replicas + readiness + PDB + anti-affinity) there are ~0 user-visible errors.
+# Abort        : cart not Ready within 5 min -> kubectl -n astronomy-shop rollout restart deploy/cart
+# Blast radius : one pod, one service; namespace-filtered (only astronomy-shop can be targeted).
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: exp-01-cart-pod-kill
+  namespace: astronomy-shop
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [astronomy-shop]
+    labelSelectors:
+      app.kubernetes.io/component: cart

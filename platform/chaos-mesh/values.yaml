@@ -1,0 +1,15 @@
+# Chaos Mesh 2.8.4 (pinned in Makefile: CHAOS_MESH_VERSION). Namespace: chaos-mesh.
+# Phase 5 guide: docs/labs/phase-5-resilience-chaos.md
+chaosDaemon:
+  # kind nodes run containerd, not Docker. The chart defaults to the Docker socket.
+  runtime: containerd
+  socketPath: /run/containerd/containerd.sock
+controllerManager:
+  # GUARDRAIL (blast radius): chaos may ONLY target namespaces annotated chaos-mesh.org/inject=enabled.
+  # A typo in an experiment cannot hit observability/ or kube-system. Only astronomy-shop is annotated.
+  enableFilterNamespace: true
+dashboard:
+  # Experiments are YAML in Git (chaos/), applied with kubectl. No unauthenticated web UI in the lab.
+  create: false
+dnsServer:
+  create: false

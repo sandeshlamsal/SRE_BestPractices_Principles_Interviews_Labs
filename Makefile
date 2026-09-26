@@ -9,9 +9,10 @@ OBS_NS        := observability
 KPS_VERSION   := 91.5.2
 TEMPO_VERSION := 3.0.0
 LOKI_VERSION  := 18.13.5
+CHAOS_MESH_VERSION := 2.8.4
 
 # Observability stack (Phase 2)
-.PHONY: obs-secrets obs-up obs-down grafana-password
+.PHONY: obs-secrets obs-up obs-down grafana-password chaos-up
 .PHONY: help cluster-up cluster-down deploy undeploy status open slo-rules prom dashboards monitors alerting alerting-sink check-runbooks test-routing awake
 
 help: ## Show targets
@@ -52,6 +53,13 @@ alerting-sink: ## Route ALL alerts to the in-cluster alert-sink (no credentials;
 
 test-routing: ## Unit-test Alertmanager routing (no credentials needed)
 	scripts/test-alert-routing.sh
+
+chaos-up: ## Install Chaos Mesh (namespace-filtered: only astronomy-shop may be targeted)
+	helm repo add chaos-mesh https://charts.chaos-mesh.org >/dev/null 2>&1 || true
+	helm repo update chaos-mesh
+	helm upgrade --install chaos-mesh chaos-mesh/chaos-mesh --version $(CHAOS_MESH_VERSION) \
+	  -n chaos-mesh --create-namespace -f platform/chaos-mesh/values.yaml --wait --timeout 10m
+	kubectl annotate namespace $(NAMESPACE) chaos-mesh.org/inject=enabled --overwrite
 
 check-runbooks: ## Verify every alert rule in the repo has a runbook that exists in runbooks/
 	scripts/check-runbooks.sh
